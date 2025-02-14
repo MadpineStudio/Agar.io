@@ -165,11 +165,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f1745656d3bffa478fbf2dfe3d52ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 252
+  mass: 254
   isBacteria: 0
   canAbsorb: 1
   playerSecondaryBody: {fileID: 2958243076540236149}
   superficialDensity: 100
-  speed: 750
+  speed: 5
   playerRb: {fileID: 1090818927870405005}
   playerRef: {fileID: 0}

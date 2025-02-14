@@ -27,7 +27,7 @@ public class PlayerBehaviour : AbsorbableObject
         base.Start();
     }
 
-    void FixedUpdate()
+    public void FixedUpdate()
     {
         playerMovement = playerActions.PlayerMap.Move.ReadValue<Vector2>() * speed * Time.fixedDeltaTime;
         playerRb.MovePosition(playerRb.position + playerMovement);

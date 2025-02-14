@@ -13,8 +13,9 @@ public class PlayerSecondaryBody : PlayerBehaviour
     void Update()
     {
     }
-    void FixedUpdate()
+    new void FixedUpdate()
     {
+        base.FixedUpdate();
         if (Time.time > delay)
         {
             // Vector2 direction = (playerRef.transform.position - transform.position) / (playerRef.transform.position - transform.position).magnitude * speed * Time.fixedDeltaTime;
