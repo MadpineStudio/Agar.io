@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class PlayerBehaviour : AbsorbableObject
 {
     private PlayerActions playerActions; 
-    [SerializeField] private float speed;
+    public float speed;
     public Rigidbody2D playerRb;
     private Vector2 playerMovement;
     void Awake(){
@@ -27,10 +27,13 @@ public class PlayerBehaviour : AbsorbableObject
         base.Start();
     }
 
+    void FixedUpdate()
+    {
+        playerMovement = playerActions.PlayerMap.Move.ReadValue<Vector2>() * speed * Time.fixedDeltaTime;
+        playerRb.MovePosition(playerRb.position + playerMovement);
+    }
     void Update()
     {
-        playerMovement = playerActions.PlayerMap.Move.ReadValue<Vector2>();
-        playerRb.linearVelocity = playerMovement * speed * Time.deltaTime;
     }
     private void Atack(InputAction.CallbackContext context){
         

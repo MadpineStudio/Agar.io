@@ -6,7 +6,6 @@ public class SoftBodyManager : MonoBehaviour
     public static SoftBodyManager Instance { get; private set; }
     public float collisionRadius = 0.3f;
     public float repulsionForce = 150f;
-
     private List<SoftBodyInstance> softBodies = new List<SoftBodyInstance>();
 
     void Awake()

@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f1745656d3bffa478fbf2dfe3d52ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 250
+  mass: 252
   isBacteria: 0
   canAbsorb: 1
   playerSecondaryBody: {fileID: 2958243076540236149}
