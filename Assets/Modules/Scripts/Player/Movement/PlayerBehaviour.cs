@@ -5,7 +5,7 @@ public class PlayerBehaviour : AbsorbableObject
 {
     private PlayerActions playerActions; 
     [SerializeField] private float speed;
-    [SerializeField] private Rigidbody2D playerRb;
+    public Rigidbody2D playerRb;
     private Vector2 playerMovement;
     void Awake(){
         playerActions = new();
@@ -22,9 +22,9 @@ public class PlayerBehaviour : AbsorbableObject
         playerActions.PlayerMap.Disable();
     }
 
-
-    void Start()
+    new void Start()
     {
+        base.Start();
     }
 
     void Update()
