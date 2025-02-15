@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4cba9abde5dd92f4ba9f8e6460f59d33
+guid: ce21c08ce04c0b94dbd92a135b7fd2a8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8587478411920682348
-    second: person-icon_0
+      213: -8529114021065564871
+    second: noiseTexture_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,9 +40,9 @@ TextureImporter:
     filterMode: 1
     aniso: 1
     mipBias: 0
-    wrapU: 1
-    wrapV: 1
-    wrapW: 1
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -72,20 +72,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Win64
-    maxTextureSize: 2048
+    maxTextureSize: 256
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -98,19 +85,6 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: Standalone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -139,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: person-icon_0
+      name: noiseTexture_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 223
-        height: 226
+        width: 256
+        height: 256
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c6d2ed20e1adc2770800000000000000
-      internalID: 8587478411920682348
+      spriteID: 93d559dacff72a980800000000000000
+      internalID: -8529114021065564871
       vertices: []
       indices: 
       edges: []
@@ -174,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      person-icon_0: 8587478411920682348
+      noiseTexture_0: -8529114021065564871
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &9026721403379413282
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 936418343761505671}
+  - component: {fileID: 7086677229926929260}
+  - component: {fileID: 3836033229978500243}
+  - component: {fileID: 2805901268221298775}
+  m_Layer: 0
+  m_Name: P_MapManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &936418343761505671
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9026721403379413282}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7086677229926929260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9026721403379413282}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53d71d5580fc10b4aa7ea53cf41e60dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collisionRadius: 0.3
+  repulsionForce: 150
+--- !u!114 &3836033229978500243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9026721403379413282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8add524728005dd42a819ff2daad9ade, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  debugQTree: 1
+--- !u!114 &2805901268221298775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9026721403379413282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae73b3082b140124d93790ac68f263e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawnerActivated: 1
+  dormantMassBall: {fileID: 6849132508437245434, guid: 407343f0aad50ca4c91adfd298fbba65, type: 3}
+  bacteriaDivider: {fileID: 5826143693938200157, guid: 464e6f17596f36249a85411a5ed96c48, type: 3}
+  massBalls: []
+  bacteria: []
+  enemies:
+  - {fileID: 0}
+  playerCamera: {fileID: 1748670062504540361, guid: 822e82b1bd709054ba4d4b5fbb459eeb, type: 3}
+  playerPref: {fileID: 5740492255705957149, guid: b7bdf1c178dc8ce42a0e731564cfd9ee, type: 3}
+  CameraPref: {fileID: 5708650856255928345, guid: 822e82b1bd709054ba4d4b5fbb459eeb, type: 3}
+  mapDataSettings: {fileID: 11400000, guid: b2cd2e907245d5d489dae173498e0298, type: 2}
