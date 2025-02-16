@@ -3,13 +3,13 @@ using UnityEngine;
 public class EnemyBehaviour : PlayerBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    new void Start()
     {
 
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    new void FixedUpdate()
     {
         // absorbables.RemoveAll(obj => obj == null);
         // absorbables.UpdatePositions();
