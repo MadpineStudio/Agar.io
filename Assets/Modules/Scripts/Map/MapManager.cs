@@ -15,21 +15,21 @@ public class MapManager : MonoBehaviour
     [SerializeField] private List<GameObject> bacteria = new();
     public List<EnemyBehaviour> enemies = new();
 
-    [Header("Map Settings")] 
+    [Header("Map Settings")]
     [SerializeField] private CinemachineVirtualCameraBase playerCamera;
     [SerializeField] private GameObject playerPref;
     [SerializeField] private GameObject CameraPref;
     [SerializeField] private MapDataSettings mapDataSettings;
-    
+
     void Start()
     {
         QTreeEntryPoint.instance.SetupQTree(mapDataSettings.maxCapacityByChunk, Mathf.CeilToInt(mapDataSettings.boardScale * .5f));
-            
-            
+
+
         spawnerActivated = true;
         SpawnStartInertMassCells();
         SpawnPlayer();
-        // StartCoroutine(SpawnInertMass(.1f));
+        StartCoroutine(SpawnInertMass(.1f));
         // StartCoroutine(BacteriaSpawner(1));
     }
 
@@ -39,8 +39,9 @@ public class MapManager : MonoBehaviour
         {
             Vector2 pos = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(
                 -mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
-            QTreeEntryPoint.instance.Insert(pos.x, pos.y);
-            Instantiate(dormantMassBall, pos, quaternion.identity, transform);
+
+            GameObject newDormantBall = Instantiate(dormantMassBall, pos, quaternion.identity, transform);
+            QTreeEntryPoint.instance.Insert(pos.x, pos.y, newDormantBall);
         }
     }
 
@@ -48,13 +49,29 @@ public class MapManager : MonoBehaviour
     {
         Vector2 pos = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(
             -mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
-        
+
         GameObject playerSpawned = Instantiate(playerPref, pos, quaternion.identity);
-        QTreeEntryPoint.instance.Insert(pos.x, pos.y);
+
+
+        GameObject upperPoint = new GameObject("UpperPivot");
+        upperPoint.transform.SetParent(playerSpawned.transform);
+        upperPoint.transform.position = playerSpawned.transform.position + new Vector3(0, 1.25f);
+
+        GameObject lowerPoint = new GameObject("LowerPivot");
+        lowerPoint.transform.SetParent(playerSpawned.transform);
+        lowerPoint.transform.position = playerSpawned.transform.position + new Vector3(0, -1.25f);
+
+
+        CinemachineTargetGroup targetGroup = playerSpawned.transform.GetChild(0).transform.GetComponent<CinemachineTargetGroup>();
+        targetGroup.AddMember(playerSpawned.transform, 1, 7);
+        targetGroup.AddMember(upperPoint.transform, 1, 7);
+        targetGroup.AddMember(lowerPoint.transform, 1, 7);
+        // QTreeEntryPoint.instance.Insert(pos.x, pos.y, playerSpawned);
 
         CinemachineVirtualCameraBase camera = Instantiate(CameraPref, Vector3.zero, quaternion.identity)
             .GetComponent<CinemachineCamera>();
-        camera.Follow = playerSpawned.transform.GetChild(0).transform;
+
+        camera.Follow = targetGroup.transform;
     }
     public void ReactivateSpawner()
     {
@@ -65,17 +82,18 @@ public class MapManager : MonoBehaviour
     private IEnumerator SpawnInertMass(float delay)
     {
         int maxSpawnCapacity = 500;
-        int i = 0;
-        
+
         while (spawnerActivated)
         {
             massBalls.RemoveAll(obj => obj == null);
-            if(i < maxSpawnCapacity)
+            if (maxSpawnCapacity > QTreeEntryPoint.instance.CountPoints())
             {
+                Vector2 pos = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(
+           -mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
                 // massBalls.Add(Instantiate(dormantMassBall, new Vector3(Random.Range(-48f, 49f), Random.Range(-48f, 49f), 0), transform.rotation));
-                QTreeEntryPoint.instance.Insert(Random.Range(-48f, 49f), Random.Range(-48f, 49f));
+                GameObject newDormantMassBall = Instantiate(dormantMassBall, pos, transform.rotation, transform);
+                QTreeEntryPoint.instance.Insert(pos.x, pos.y, newDormantMassBall);
                 // enemies[0].absorbables.AddAll(massBalls.Select(obj => obj.transform).ToList());
-                i++;
             }
             yield return new WaitForSeconds(delay);
         }

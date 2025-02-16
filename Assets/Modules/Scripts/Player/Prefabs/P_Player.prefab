@@ -158,11 +158,15 @@ MonoBehaviour:
   mass: 100
   isBacteria: 0
   canAbsorb: 1
-  playerSecondaryBody: {fileID: 2958243076540236149, guid: 3bb33f6bab6387b4cbd03637325513f5, type: 3}
   superficialDensity: 100
   speed: 25
+  radius: 1.25
   playerRb: {fileID: 3460120906137696908}
   playerSettings: {fileID: 11400000, guid: 848217c74d00ea04fb9b462a14fdf9bd, type: 2}
+  playerSecondaryBody: {fileID: 2958243076540236149, guid: 3bb33f6bab6387b4cbd03637325513f5, type: 3}
+  currentSpeed: 0
+  acceleration: 30
+  maxSpeed: 6
 --- !u!58 &7682192363109393684
 CircleCollider2D:
   m_ObjectHideFlags: 0

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Quadtree
 {
@@ -56,7 +57,7 @@ public class Quadtree
         if (!divided)
         {
             Subdivide();
-        
+
             // Redistribui os pontos já inseridos para os filhos
             List<Point> tempPoints = new List<Point>(points);
             points.Clear();
@@ -98,26 +99,27 @@ public class Quadtree
             return false;
         return Insert(newPoint);
     }
-    
+
     private void TryUnsubdivide()
     {
         if (!divided)
             return;
-
         // Atualiza o estado dos nós filhos antes de testar se estão vazios
+        int subvidedPoints = CountPoints();
         northeast?.TryUnsubdivide();
         northwest?.TryUnsubdivide();
         southeast?.TryUnsubdivide();
         southwest?.TryUnsubdivide();
-
         if (northeast.IsEmpty() && northwest.IsEmpty() &&
-            southeast.IsEmpty() && southwest.IsEmpty())
+            southeast.IsEmpty() && southwest.IsEmpty() || subvidedPoints <= capacity)
         {
+            points =  GetPoints();
             northeast = null;
             northwest = null;
             southeast = null;
             southwest = null;
             divided = false;
+        
         }
     }
 
@@ -138,11 +140,11 @@ public class Quadtree
         List<Point> found = new List<Point>();
         if (!boundary.Intersects(range))
             return found;
-        
+
         foreach (Point p in points)
             if (range.Contains(p))
                 found.Add(p);
-        
+
         if (divided)
         {
             found.AddRange(northeast.Query(range));
@@ -151,5 +153,53 @@ public class Quadtree
             found.AddRange(southwest.Query(range));
         }
         return found;
+    }
+    public List<Point> QueryCircle(Vector2 center, float radius)
+    {
+        List<Point> found = new List<Point>();
+        if (!CircleIntersectsRectangle(center, radius, boundary))
+            return found;
+        foreach (Point p in points)
+            if (Vector2.Distance(new Vector2(p.X, p.Y), center) <= radius)
+                found.Add(p);
+        if (divided)
+        {
+            found.AddRange(northeast.QueryCircle(center, radius));
+            found.AddRange(northwest.QueryCircle(center, radius));
+            found.AddRange(southeast.QueryCircle(center, radius));
+            found.AddRange(southwest.QueryCircle(center, radius));
+        }
+        return found;
+    }
+
+    private bool CircleIntersectsRectangle(Vector2 center, float radius, Rectangle rect)
+    {
+        float dx = Mathf.Max(Mathf.Abs(center.x - rect.X) - rect.W, 0);
+        float dy = Mathf.Max(Mathf.Abs(center.y - rect.Y) - rect.H, 0);
+        return (dx * dx + dy * dy) <= radius * radius;
+    }
+    public int CountPoints()
+    {
+        int total = points.Count;
+        if (divided)
+        {
+            total += northeast.CountPoints();
+            total += northwest.CountPoints();
+            total += southeast.CountPoints();
+            total += southwest.CountPoints();
+        }
+        return total;
+    }
+     public List<Point> GetPoints()
+    {
+        List<Point> total = points;
+        if (divided)
+        {
+            total.AddRange(northeast.points);
+            total.AddRange(northwest.points);
+            total.AddRange(southeast.points);
+            total.AddRange(southwest.points);
+        }
+        return total;
     }
 }

@@ -1,28 +1,50 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerSecondaryBody : PlayerBehaviour
 {
-    public GameObject playerRef;
-    private float delay;
-    void Start()
+    private float _initialRunningTime;
+    private float _initialSpeed;
+    private bool _canMove;
+    private Vector2 _mousePosition;
+    public float minSpeed;
+    
+    // public GameObject playerRef;
+    new void Start()
     {
-        delay = Time.time + 0.5F;
-        float newDiameter = Mathf.Sqrt(this.mass / (Mathf.PI * superficialDensity)) * 2;
-        transform.localScale = new Vector3(newDiameter, newDiameter, newDiameter);
+        base.Start();
+        _mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        _initialSpeed = maxSpeed;
+        _initialRunningTime = Time.time + 1;
+        StartCoroutine(InitialMovement());
     }
     void Update()
     {
+        QueryNearbyCircle();
     }
     new void FixedUpdate()
     {
-        base.FixedUpdate();
-        if (Time.time > delay)
+        if(_canMove) base.FixedUpdate();
+    }
+    new void OnDrawGizmos()
+    {
+
+    }
+    private void HandleInitialMovement()
+    {
+        Vector2 initialDirection = (_mousePosition - (Vector2)transform.position).normalized;
+        _initialSpeed -= acceleration * (0.2f * Time.deltaTime);
+        _initialSpeed = Mathf.Max(_initialSpeed, minSpeed);
+        transform.Translate(initialDirection * (_initialSpeed * (10 * Time.deltaTime)));
+    }
+    private IEnumerator InitialMovement()
+    {
+        while (Time.time < _initialRunningTime)
         {
-            // Vector2 direction = (playerRef.transform.position - transform.position) / (playerRef.transform.position - transform.position).magnitude * speed * Time.fixedDeltaTime;
-            Vector2 direction = (playerRef.transform.position - transform.position).normalized * speed * Time.fixedDeltaTime;
-            playerRb.MovePosition(playerRb.position + direction);
-
+            HandleInitialMovement();
+            yield return new WaitForEndOfFrame();
         }
-
+        _canMove = true;
+        _initialSpeed = maxSpeed;
     }
 }

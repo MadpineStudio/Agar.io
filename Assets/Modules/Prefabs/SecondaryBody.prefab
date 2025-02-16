@@ -57,7 +57,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 8b7fd3849ae15154e934441e9d0556c5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -78,7 +78,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 1523562316264380760, guid: c96d65f704cfbf340a3d7887966d6c7f, type: 3}
   m_Color: {r: 0, g: 0.20677495, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -128,12 +128,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f1745656d3bffa478fbf2dfe3d52ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 254
+  mass: 100
   isBacteria: 0
   canAbsorb: 1
-  playerSecondaryBody: {fileID: 2958243076540236149}
   superficialDensity: 100
   speed: 5
+  radius: 1.25
   playerRb: {fileID: 1090818927870405005}
   playerSettings: {fileID: 0}
-  playerRef: {fileID: 0}
+  playerSecondaryBody: {fileID: 2958243076540236149}
+  currentSpeed: 6
+  acceleration: 30
+  maxSpeed: 6
+  minSpeed: 0

@@ -279,7 +279,7 @@ MonoBehaviour:
     Enabled: 0
     DefaultMode: 2
   DefaultBlend:
-    Style: 1
+    Style: 2
     Time: 2
     CustomCurve:
       serializedVersion: 2
@@ -527,11 +527,15 @@ MonoBehaviour:
   mass: 100
   isBacteria: 0
   canAbsorb: 1
-  playerSecondaryBody: {fileID: 2958243076540236149, guid: 3bb33f6bab6387b4cbd03637325513f5, type: 3}
   superficialDensity: 100
   speed: 750
+  radius: 1
   playerRb: {fileID: 948521659}
   playerSettings: {fileID: 0}
+  playerSecondaryBody: {fileID: 2958243076540236149, guid: 3bb33f6bab6387b4cbd03637325513f5, type: 3}
+  currentSpeed: 0
+  acceleration: 0
+  maxSpeed: 0
 --- !u!212 &948521662
 SpriteRenderer:
   m_ObjectHideFlags: 0

@@ -103,5 +103,4 @@ MonoBehaviour:
   mass: 10
   isBacteria: 0
   canAbsorb: 0
-  playerSecondaryBody: {fileID: 0}
   superficialDensity: 100

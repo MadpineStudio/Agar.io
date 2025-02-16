@@ -17,12 +17,14 @@ public class QTreeEntryPoint : MonoBehaviour
         Rectangle boundary = new Rectangle(position.x, position.y, boardScale, boardScale);
         QuadTree = new Quadtree(boundary, capacity);
     }
-    public void Insert(float x, float y)
+    public void Insert(float x, float y, GameObject poindData)
     {
-        Point point = new Point(x, y, null);
+        Point point = new Point(x, y, poindData);
         QuadTree.Insert(point);
     }
-
+    public int CountPoints(){
+        return QuadTree.CountPoints()
+;    }
     void OnDrawGizmos()
     {
         if (QuadTree == null) return;

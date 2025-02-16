@@ -60,9 +60,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _CutOff: 0
-    - _DistortionScale: 0.067
-    - _Edge00: 0.744
-    - _Edge01: 0.73
+    - _DistortionScale: 0.001
+    - _Edge00: 0.94
+    - _Edge01: 0.79
     - _Float: 0
     - _QueueControl: 0
     - _QueueOffset: 0
