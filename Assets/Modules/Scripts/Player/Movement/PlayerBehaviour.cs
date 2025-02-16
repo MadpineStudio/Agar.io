@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static QTreeEntryPoint;
-
+using static PlayerManager;
 public class PlayerBehaviour : AbsorbableObject
 {
     private PlayerActions playerActions;
+    public bool colliding;
+    public GameObject playerRef;
     public float speed;
     public float radius = 1;
     public Rigidbody2D playerRb;
@@ -16,11 +18,13 @@ public class PlayerBehaviour : AbsorbableObject
     public float currentSpeed;
     public float acceleration;
     public float maxSpeed;
-
+    public Point oldPoint;
     void Awake()
     {
         playerActions = new();
         playerActions.Enable();
+        if (playerRef == null) playerRef = gameObject;
+        oldPoint = new Point(transform.position.x, transform.position.y, gameObject);
     }
 
     void OnEnable()
@@ -42,15 +46,11 @@ public class PlayerBehaviour : AbsorbableObject
 
     public void FixedUpdate()
     {
-        // Vector2 previousPosition = playerRb.position;
-        // playerMovement = playerActions.PlayerMap.Move.ReadValue<Vector2>() * (speed * Time.fixedDeltaTime);
-        // Vector2 newPosition = previousPosition + playerMovement * (speed * Time.fixedDeltaTime);
-
-        // playerRb.MovePosition(newPosition);
         HandleMovement();
     }
     public void HandleMovement()
     {
+        Vector3 oldpos = transform.position;
         Vector2 direction = playerActions.PlayerMap.Move.ReadValue<Vector2>();
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         if (Input.GetMouseButton(0))
@@ -64,10 +64,17 @@ public class PlayerBehaviour : AbsorbableObject
         }
         else
         {
-            currentSpeed = 0f; // Reseta a velocidade ao soltar os botões
+            currentSpeed = 0f;
         }
 
         transform.Translate(direction.normalized * (currentSpeed * Time.deltaTime));
+        if (oldpos != transform.position)
+        {
+            Point newPoint = new Point(transform.position.x, transform.position.y, gameObject);
+            PlayerManager.instance.quadtree.UpdatePosition(oldPoint, newPoint);
+            oldPoint = newPoint;
+        }
+
     }
 
     private void Update()
@@ -75,38 +82,72 @@ public class PlayerBehaviour : AbsorbableObject
         QueryNearbyPoints();
         QueryNearbyCircle();
     }
-    // Em PlayerBehaviour.cs
     public void QueryNearbyPoints()
     {
-        if (instance?.QuadTree == null) return;
+        if (QTreeEntryPoint.instance?.QuadTree == null) return;
         Vector2 pos = transform.position;
         Rectangle queryRange = new Rectangle(pos.x, pos.y, playerSettings.searchAreaWidth, playerSettings.searchAreaHeight);
-        nearbyPoints = instance.QuadTree.Query(queryRange);
+        nearbyPoints = QTreeEntryPoint.instance.QuadTree.Query(queryRange);
+
     }
     public void QueryNearbyCircle()
     {
-        if (instance?.QuadTree == null)
+        if (QTreeEntryPoint.instance?.QuadTree == null)
             return;
         Vector2 pos = transform.position;
         float radius = this.radius * transform.localScale.x;
-        var nearbyPoints = instance.QuadTree.QueryCircle(pos, radius);
+        var nearbyPoints = QTreeEntryPoint.instance.QuadTree.QueryCircle(pos, radius);
+        var nearbyPlayers = new List<Point>();
+        if (PlayerManager.instance?.quadtree != null) nearbyPlayers = PlayerManager.instance.quadtree.QueryCircle(pos, radius);
         if (nearbyPoints.Count > 0)
         {
-            Debug.Log("Pontos encontrados na query circular: " + nearbyPoints.Count);
+            // Debug.Log("Pontos encontrados na query circular: " + nearbyPoints.Count);
             foreach (Point point in nearbyPoints)
             {
                 GameObject obj = point.data as GameObject;
                 mass += obj.transform.GetComponent<AbsorbableObject>().mass;
                 UpdateDiameter();
                 Destroy(point.data as GameObject);
-                instance.QuadTree.Remove(point);
+                QTreeEntryPoint.instance.QuadTree.Remove(point);
             }
+        }
+        if (nearbyPlayers.Count > 1)
+        {
+            Debug.Log("Pontos encontrados na query circular dos players: " + nearbyPlayers.Count);
+            foreach (Point point in nearbyPlayers)
+            {
+
+                GameObject obj = point.data as GameObject;
+                GameObject playerReference = obj.GetComponent<PlayerBehaviour>().playerRef;
+                if (playerReference == playerRef)
+                {
+                    Debug.Log("COlidiu com o player");
+                    colliding = true;
+                }
+                if (gameObject != playerRef && point.data as GameObject == gameObject)
+                {
+
+                    if (gameObject.GetComponent<PlayerSecondaryBody>().canMove)
+                    {
+                        PlayerBehaviour player = playerRef.GetComponent<PlayerBehaviour>();
+                        player.mass += mass;
+                        player.UpdateDiameter();
+                        UpdateDiameter();
+                        PlayerManager.instance.quadtree.Remove(point);
+                        Destroy(gameObject);
+                    }
+                }
+            }
+        }
+        if (nearbyPlayers.Count == 1)
+        {
+            colliding = false;
         }
     }
 
     private void Atack(InputAction.CallbackContext context)
     {
-        if(mass > 500) Separate();
+        if (mass > 500) Separate();
     }
 
 
@@ -126,12 +167,16 @@ public class PlayerBehaviour : AbsorbableObject
         Gizmos.DrawWireSphere(transform.position, radius * transform.localScale.x);
     }
 
-    public void Separate(){
+    public void Separate()
+    {
         mass /= 2;
-        playerSecondaryBody.GetComponent<PlayerSecondaryBody>().mass = mass;
+        PlayerSecondaryBody playerSecondaryBodyLocal = playerSecondaryBody.GetComponent<PlayerSecondaryBody>();
+        playerSecondaryBodyLocal.mass = mass;
+        playerSecondaryBodyLocal.playerRef = playerRef;
 
-        Instantiate(playerSecondaryBody, transform.position, transform.rotation);
-        UpdateDiameter();        
+        GameObject newPart = Instantiate(playerSecondaryBody, transform.position, transform.rotation);
+        PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
+        UpdateDiameter();
     }
 
     // public IEnumerator SizeUpdater(float newSize)

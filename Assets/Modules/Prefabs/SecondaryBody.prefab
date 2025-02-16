@@ -128,10 +128,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f1745656d3bffa478fbf2dfe3d52ca8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 100
+  mass: 443.75
   isBacteria: 0
   canAbsorb: 1
   superficialDensity: 100
+  colliding: 0
+  playerRef: {fileID: 0}
   speed: 5
   radius: 1.25
   playerRb: {fileID: 1090818927870405005}

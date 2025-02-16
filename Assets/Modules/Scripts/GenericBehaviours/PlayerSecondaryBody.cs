@@ -1,14 +1,15 @@
 using System.Collections;
+using System.Diagnostics;
 using UnityEngine;
 
 public class PlayerSecondaryBody : PlayerBehaviour
 {
     private float _initialRunningTime;
     private float _initialSpeed;
-    private bool _canMove;
+    public bool canMove;
     private Vector2 _mousePosition;
     public float minSpeed;
-    
+
     // public GameObject playerRef;
     new void Start()
     {
@@ -24,27 +25,42 @@ public class PlayerSecondaryBody : PlayerBehaviour
     }
     new void FixedUpdate()
     {
-        if(_canMove) base.FixedUpdate();
+        // if(_canMove) base.FixedUpdate();
+        if (!colliding && canMove) ReturningMovement();
     }
     new void OnDrawGizmos()
     {
 
     }
+    private void ReturningMovement()
+    {
+        Vector2 direction = playerRef.transform.position - transform.position;
+        transform.Translate(direction.normalized * (_initialSpeed * Time.deltaTime));
+        PlayerManager.instance.quadtree.UpdatePosition(oldPoint, new Point(transform.position.x, transform.position.y, gameObject));
+    }
     private void HandleInitialMovement()
     {
+        Vector3 oldpos = transform.position;
         Vector2 initialDirection = (_mousePosition - (Vector2)transform.position).normalized;
         _initialSpeed -= acceleration * (0.2f * Time.deltaTime);
         _initialSpeed = Mathf.Max(_initialSpeed, minSpeed);
         transform.Translate(initialDirection * (_initialSpeed * (10 * Time.deltaTime)));
+        if (oldpos != transform.position)
+        {
+            Point newPoint = new Point(transform.position.x, transform.position.y, gameObject);
+            PlayerManager.instance.quadtree.UpdatePosition(oldPoint, newPoint);
+            oldPoint = newPoint;
+        }
     }
     private IEnumerator InitialMovement()
     {
-        while (Time.time < _initialRunningTime)
+        while (Time.time < _initialRunningTime || _initialSpeed > 0)
         {
             HandleInitialMovement();
             yield return new WaitForEndOfFrame();
         }
-        _canMove = true;
+
+        canMove = true;
         _initialSpeed = maxSpeed;
     }
 }

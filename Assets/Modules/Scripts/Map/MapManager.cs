@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Cinemachine;
+using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -13,26 +13,27 @@ public class MapManager : MonoBehaviour
     [SerializeField] private GameObject bacteriaDivider;
     [SerializeField] private List<GameObject> massBalls = new();
     [SerializeField] private List<GameObject> bacteria = new();
+    [SerializeField] private GameObject playerPref;
+    [SerializeField] private GameObject playerManager;
+    [SerializeField] private PlayerDataScriptable playerData;
+    [SerializeField] private TextMeshProUGUI nickArea;
     public List<EnemyBehaviour> enemies = new();
 
     [Header("Map Settings")]
-    [SerializeField] private CinemachineVirtualCameraBase playerCamera;
-    [SerializeField] private GameObject playerPref;
-    [SerializeField] private GameObject CameraPref;
+    
     [SerializeField] private MapDataSettings mapDataSettings;
 
     void Start()
     {
+        nickArea.SetText(playerData.playerName);
+    }
+    public void StartGame(){
+        playerData.playerName = nickArea.text;
         QTreeEntryPoint.instance.SetupQTree(mapDataSettings.maxCapacityByChunk, Mathf.CeilToInt(mapDataSettings.boardScale * .5f));
-
-
         spawnerActivated = true;
         SpawnStartInertMassCells();
-        SpawnPlayer();
         StartCoroutine(SpawnInertMass(.1f));
-        // StartCoroutine(BacteriaSpawner(1));
     }
-
     public void SpawnStartInertMassCells()
     {
         for (int a = 0; a < mapDataSettings.startAbsorbablesCount; a++)
@@ -43,36 +44,10 @@ public class MapManager : MonoBehaviour
             GameObject newDormantBall = Instantiate(dormantMassBall, pos, quaternion.identity, transform);
             QTreeEntryPoint.instance.Insert(pos.x, pos.y, newDormantBall);
         }
+        playerManager.SetActive(true);
     }
 
-    public void SpawnPlayer()
-    {
-        Vector2 pos = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(
-            -mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
-
-        GameObject playerSpawned = Instantiate(playerPref, pos, quaternion.identity);
-
-
-        GameObject upperPoint = new GameObject("UpperPivot");
-        upperPoint.transform.SetParent(playerSpawned.transform);
-        upperPoint.transform.position = playerSpawned.transform.position + new Vector3(0, 1.25f);
-
-        GameObject lowerPoint = new GameObject("LowerPivot");
-        lowerPoint.transform.SetParent(playerSpawned.transform);
-        lowerPoint.transform.position = playerSpawned.transform.position + new Vector3(0, -1.25f);
-
-
-        CinemachineTargetGroup targetGroup = playerSpawned.transform.GetChild(0).transform.GetComponent<CinemachineTargetGroup>();
-        targetGroup.AddMember(playerSpawned.transform, 1, 7);
-        targetGroup.AddMember(upperPoint.transform, 1, 7);
-        targetGroup.AddMember(lowerPoint.transform, 1, 7);
-        // QTreeEntryPoint.instance.Insert(pos.x, pos.y, playerSpawned);
-
-        CinemachineVirtualCameraBase camera = Instantiate(CameraPref, Vector3.zero, quaternion.identity)
-            .GetComponent<CinemachineCamera>();
-
-        camera.Follow = targetGroup.transform;
-    }
+    
     public void ReactivateSpawner()
     {
         // spawnerActivated = true;
