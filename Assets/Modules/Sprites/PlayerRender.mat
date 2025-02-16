@@ -59,16 +59,18 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Border_1: 0.85
     - _CutOff: 0
     - _DistortionScale: 0.001
-    - _Edge00: 0.94
+    - _Edge00: 0.9
     - _Edge01: 0.79
-    - _Float: 0
+    - _Float: 0.72
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _RenderRadius: 0.747
+    - _RenderRadius: 0.034
     - _Strength: 0.01
     m_Colors:
-    - _Color: {r: 1, g: 0.35417512, b: 0, a: 1}
+    - _Border: {r: 0.91823894, g: 0.33531198, b: 0, a: 1}
+    - _Color: {r: 1, g: 0.66555667, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
