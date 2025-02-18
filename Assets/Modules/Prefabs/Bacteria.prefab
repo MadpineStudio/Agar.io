@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2361104390274470605}
   - component: {fileID: 7949729815809282200}
   m_Layer: 0
-  m_Name: BacteriaDivider
+  m_Name: Bacteria
   m_TagString: Absorbable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

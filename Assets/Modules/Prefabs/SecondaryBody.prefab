@@ -142,4 +142,5 @@ MonoBehaviour:
   currentSpeed: 6
   acceleration: 30
   maxSpeed: 6
+  canMove: 0
   minSpeed: 0
