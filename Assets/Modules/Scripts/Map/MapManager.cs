@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(QTreeEntryPoint))]
@@ -16,7 +17,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private GameObject playerPref;
     [SerializeField] private GameObject playerManager;
     [SerializeField] private PlayerDataScriptable playerData;
-    [SerializeField] private TextMeshProUGUI nickArea;
+    [SerializeField] private TMP_InputField nickArea;
     public List<EnemyBehaviour> enemies = new();
 
     [Header("Map Settings")]
@@ -25,7 +26,7 @@ public class MapManager : MonoBehaviour
 
     void Start()
     {
-        nickArea.SetText(playerData.playerName);
+        nickArea.text = playerData.playerName;
     }
     public void StartGame()
     {

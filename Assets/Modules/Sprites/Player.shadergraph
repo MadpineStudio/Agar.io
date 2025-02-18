@@ -32,6 +32,9 @@
         },
         {
             "m_Id": "8ac1c04d2f004e309aa574179c119c67"
+        },
+        {
+            "m_Id": "65321c436d044df29ae5d9af41c6460d"
         }
     ],
     "m_Keywords": [],
@@ -995,10 +998,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 318.66668701171877,
-            "y": 95.33334350585938,
-            "width": 106.6666259765625,
-            "height": 36.0
+            "x": 313.0000305175781,
+            "y": 97.00001525878906,
+            "width": 105.0,
+            "height": 34.0
         }
     },
     "m_Slots": [
@@ -1655,6 +1658,36 @@
     "m_CustomColors": {
         "m_SerializableColors": []
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty",
+    "m_ObjectId": "65321c436d044df29ae5d9af41c6460d",
+    "m_Guid": {
+        "m_GuidSerialized": "03331f0f-c6a8-4ca5-b18a-11c465660d98"
+    },
+    "m_Name": "ProfileImage",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "ProfileImage",
+    "m_DefaultReferenceName": "_ProfileImage",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "m_SerializedTexture": "",
+        "m_Guid": ""
+    },
+    "isMainTexture": false,
+    "useTilingAndOffset": false,
+    "m_Modifiable": true,
+    "m_DefaultType": 0
 }
 
 {
@@ -2322,8 +2355,8 @@
     "m_ObjectId": "90a4bdf87ab449cb81b9e61ed755c080",
     "m_Title": "DISTORTION MAP",
     "m_Position": {
-        "x": -2020.0,
-        "y": 402.66656494140627
+        "x": -2019.999755859375,
+        "y": 402.0
     }
 }
 
@@ -2362,6 +2395,9 @@
         },
         {
             "m_Id": "74c707ab895644478e9f7b0c4817afe8"
+        },
+        {
+            "m_Id": "65321c436d044df29ae5d9af41c6460d"
         }
     ]
 }

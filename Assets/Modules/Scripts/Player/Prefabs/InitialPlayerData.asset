@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9bbd6117ad7654469a859af87ddf034, type: 3}
   m_Name: InitialPlayerData
   m_EditorClassIdentifier: 
-  playerName: 
-  playerImage: {fileID: 0}
+  playerName: "\u200B"
+  playerImage: {fileID: 21300000, guid: f1737b486a23f634bb246de79b8d4f4b, type: 3}
   playerBaseColor: {r: 0, g: 0, b: 0, a: 0}
