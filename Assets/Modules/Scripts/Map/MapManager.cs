@@ -12,7 +12,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private GameObject dormantMassBall;
     [SerializeField] private GameObject bacteriaDivider;
     [SerializeField] private List<GameObject> massBalls = new();
-    [SerializeField] private List<GameObject> bacteria = new();
+    private List<GameObject> bacterias = new();
     [SerializeField] private GameObject playerPref;
     [SerializeField] private GameObject playerManager;
     [SerializeField] private PlayerDataScriptable playerData;
@@ -20,19 +20,22 @@ public class MapManager : MonoBehaviour
     public List<EnemyBehaviour> enemies = new();
 
     [Header("Map Settings")]
-    
+
     [SerializeField] private MapDataSettings mapDataSettings;
 
     void Start()
     {
         nickArea.SetText(playerData.playerName);
     }
-    public void StartGame(){
+    public void StartGame()
+    {
         playerData.playerName = nickArea.text;
         QTreeEntryPoint.instance.SetupQTree(mapDataSettings.maxCapacityByChunk, Mathf.CeilToInt(mapDataSettings.boardScale * .5f));
         spawnerActivated = true;
         SpawnStartInertMassCells();
         StartCoroutine(SpawnInertMass(.1f));
+        StartCoroutine(BacteriaSpawner(1));
+
     }
     public void SpawnStartInertMassCells()
     {
@@ -47,7 +50,7 @@ public class MapManager : MonoBehaviour
         playerManager.SetActive(true);
     }
 
-    
+
     public void ReactivateSpawner()
     {
         // spawnerActivated = true;
@@ -65,22 +68,25 @@ public class MapManager : MonoBehaviour
             {
                 Vector2 pos = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(
            -mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
-                // massBalls.Add(Instantiate(dormantMassBall, new Vector3(Random.Range(-48f, 49f), Random.Range(-48f, 49f), 0), transform.rotation));
                 GameObject newDormantMassBall = Instantiate(dormantMassBall, pos, transform.rotation, transform);
                 QTreeEntryPoint.instance.Insert(pos.x, pos.y, newDormantMassBall);
-                // enemies[0].absorbables.AddAll(massBalls.Select(obj => obj.transform).ToList());
             }
             yield return new WaitForSeconds(delay);
         }
     }
     private IEnumerator BacteriaSpawner(float delay)
     {
+        int maxSpawnCapacity = 5;
         while (spawnerActivated)
         {
-            bacteria.RemoveAll(obj => obj == null);
-            if (bacteria.Count < 15)
+            bacterias.RemoveAll(obj => obj == null);
+            if (maxSpawnCapacity > bacterias.Count)
             {
-                bacteria.Add(Instantiate(bacteriaDivider, new Vector3(Random.Range(-48f, 49f), Random.Range(-48f, 49f), 0), transform.rotation));
+                Vector2 pos = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(
+           -mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
+                GameObject newBacteria = Instantiate(bacteriaDivider, pos, transform.rotation, transform);
+                QTreeEntryPoint.instance.Insert(pos.x, pos.y, newBacteria);
+                bacterias.Add(newBacteria);
             }
             yield return new WaitForSeconds(delay);
         }

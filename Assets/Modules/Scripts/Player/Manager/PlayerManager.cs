@@ -28,7 +28,8 @@ public class PlayerManager : MonoBehaviour
     }
     public void Setup()
     {
-        Rectangle bounds = new Rectangle(0, 0, mapDataSettings.boardScale, mapDataSettings.boardScale);
+        float scale = Mathf.CeilToInt(mapDataSettings.boardScale * .5f);
+        Rectangle bounds = new Rectangle(0, 0, scale, scale);
         quadtree = new Quadtree(bounds, mapDataSettings.maxCapacityByChunk);
         SpawnPlayer();
     }
@@ -36,7 +37,8 @@ public class PlayerManager : MonoBehaviour
     public Point InsertPlayer(float x, float y, GameObject pointObject)
     {
         Point point = new Point(x, y, pointObject);
-        pointObject.GetComponent<PlayerBehaviour>().AddInitialPoint(point);
+        PlayerBehaviour playerBH = pointObject.GetComponent<PlayerBehaviour>();
+        if(playerBH != null) playerBH.AddInitialPoint(point);
         _insertMassCorroutines.Enqueue(InsertPlayerMass(point));
         if(_InsertPlayerMassCorroutine == null){
             _InsertPlayerMassCorroutine = StartCoroutine(_insertMassCorroutines.Dequeue());
