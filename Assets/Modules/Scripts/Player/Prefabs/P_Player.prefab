@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bb678de9e8f570438d4febb732c0cb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 100
+  mass: 1000
   isBacteria: 0
   canAbsorb: 1
   superficialDensity: 100

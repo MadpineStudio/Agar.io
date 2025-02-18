@@ -15,7 +15,6 @@ public class AbsorbableObject : MonoBehaviour
 
     void Update()
     {
-
     }
    
     // public void Absorb(GameObject Absorbed, float mass, bool isBacteria)
@@ -38,7 +37,7 @@ public class AbsorbableObject : MonoBehaviour
     // }
 
 
-    public void UpdateDiameter(){
+    public void UpdateDiameter(Transform transform, float mass){
         float newDiameter = Mathf.Sqrt(mass / (Mathf.PI * superficialDensity)) * 2;
         transform.localScale = new Vector3(newDiameter, newDiameter, newDiameter);
     }

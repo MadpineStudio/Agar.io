@@ -59,7 +59,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Border_1: 0.85
+    - _Border_1: 0.87
     - _CutOff: 0
     - _DistortionScale: 0.001
     - _Edge00: 0.9

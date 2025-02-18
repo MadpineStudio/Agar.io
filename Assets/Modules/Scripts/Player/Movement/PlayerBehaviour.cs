@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using static QTreeEntryPoint;
 using static PlayerManager;
+using System.Collections;
+using Unity.VisualScripting;
 public class PlayerBehaviour : AbsorbableObject
 {
     private PlayerActions playerActions;
@@ -18,13 +20,20 @@ public class PlayerBehaviour : AbsorbableObject
     public float currentSpeed;
     public float acceleration;
     public float maxSpeed;
+    private float _initialSpeed;
     public Point oldPoint;
+
+
+    private List<Point> points = new();
+    private Vector2 _mousePosition = new();
+
+
     void Awake()
     {
         playerActions = new();
         playerActions.Enable();
         if (playerRef == null) playerRef = gameObject;
-        oldPoint = new Point(transform.position.x, transform.position.y,gameObject);
+        // points.Add(new Point(transform.position.x, transform.position.y, gameObject));
     }
 
     void OnEnable()
@@ -46,11 +55,14 @@ public class PlayerBehaviour : AbsorbableObject
 
     public void FixedUpdate()
     {
-        HandleMovement();
+        if (points.Count > 0) HandleMovement();
+    }
+    public void AddInitialPoint(Point point)
+    {
+        points.Add(point);
     }
     public void HandleMovement()
     {
-        Vector3 oldpos = transform.position;
         Vector2 direction = playerActions.PlayerMap.Move.ReadValue<Vector2>();
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         if (Input.GetMouseButton(0))
@@ -66,20 +78,38 @@ public class PlayerBehaviour : AbsorbableObject
         {
             currentSpeed = 0f;
         }
-
-        transform.Translate(direction.normalized * (currentSpeed * Time.deltaTime));
-        if (oldpos != transform.position)
+        foreach (var point in points)
         {
-            Point newPoint = new Point(transform.position.x, transform.position.y, gameObject);
-            PlayerManager.instance.quadtree.UpdatePosition(oldPoint, newPoint);
-            oldPoint = newPoint;
+            float innertSpeed = 0f;
+            if (point.data != gameObject)
+            {
+                DetectCollisions(point);
+                if (!point.colliding)
+                {
+                    direction = (Vector2)transform.position - (Vector2)point.data.transform.position + direction;
+                    innertSpeed = 2f;
+                }
+            }
+            oldPoint = point;
+            GameObject pointGO = point.data;
+            pointGO.transform.Translate(direction.normalized * ((currentSpeed > 0 ? currentSpeed : innertSpeed) * Time.fixedDeltaTime));
+            // if()
+            Vector2 pointPos = pointGO.transform.position;
+            point.data = pointGO;
+            point.X = pointPos.x;
+            point.Y = pointPos.y;
+            PlayerManager.instance.quadtree.UpdatePosition(oldPoint, point);
         }
+        // if (oldpos != transform.position)
+        // {
+        //     Point newPoint = new Point(transform.position.x, transform.position.y, gameObject);
+        //     oldPoint = newPoint;
+        // }
 
     }
 
     private void Update()
     {
-        DetectCollisions();
         QueryNearbyPoints();
         QueryNearbyCircle();
     }
@@ -96,62 +126,74 @@ public class PlayerBehaviour : AbsorbableObject
     {
         if (QTreeEntryPoint.instance?.QuadTree == null)
             return;
-        Vector2 pos = transform.position;
-        float radius = this.radius * transform.localScale.x;
-        var nearbyPoints = QTreeEntryPoint.instance.QuadTree.QueryCircle(pos, radius);
-        var nearbyPlayers = new List<Point>();
-        if (PlayerManager.instance?.quadtree != null) nearbyPlayers = PlayerManager.instance.quadtree.QueryCircle(pos, radius);
-        if (nearbyPoints.Count > 0)
+        foreach (var playerPoint in points)
         {
-            // Debug.Log("Pontos encontrados na query circular: " + nearbyPoints.Count);
-            foreach (Point point in nearbyPoints)
+            Vector2 pos = playerPoint.data.transform.position;
+            float radius = this.radius * playerPoint.data.transform.localScale.x;
+            var nearbyPoints = QTreeEntryPoint.instance.QuadTree.QueryCircle(pos, radius);
+            if (nearbyPoints.Count > 0)
             {
-                GameObject obj = point.data as GameObject;
-                mass += obj.transform.GetComponent<AbsorbableObject>().mass;
-                UpdateDiameter();
-                Destroy(point.data as GameObject);
-                QTreeEntryPoint.instance.QuadTree.Remove(point);
-            }
-        }
-        if (nearbyPlayers.Count > 1)
-        {
-            Debug.Log("Pontos encontrados na query circular dos players: " + nearbyPlayers.Count);
-            foreach (Point point in nearbyPlayers)
-            {
-
-                GameObject obj = point.data as GameObject;
-                GameObject playerReference = obj.GetComponent<PlayerBehaviour>().playerRef;
-                if (playerReference == playerRef)
+                // Debug.Log("Pontos encontrados na query circular: " + nearbyPoints.Count);
+                foreach (Point point in nearbyPoints)
                 {
-                    Debug.Log("COlidiu com o player");
-                    colliding = true;
-                }
-                if (gameObject != playerRef && point.data as GameObject == gameObject)
-                {
-
-                    if (gameObject.GetComponent<PlayerSecondaryBody>().canMove)
-                    {
-                        PlayerBehaviour player = playerRef.GetComponent<PlayerBehaviour>();
-                        player.mass += mass;
-                        player.UpdateDiameter();
-                        UpdateDiameter();
-                        PlayerManager.instance.quadtree.Remove(point);
-                        Destroy(gameObject);
-                    }
+                    GameObject obj = point.data;
+                    float mass = Mathf.PI * superficialDensity * Mathf.Pow(playerPoint.data.transform.localScale.x / 2, 2);
+                    mass += obj.transform.GetComponent<AbsorbableObject>().mass;
+                    UpdateDiameter(playerPoint.data.transform, mass);
+                    // UpdateDiameter();
+                    Destroy(point.data);
+                    QTreeEntryPoint.instance.QuadTree.Remove(point);
                 }
             }
         }
-        if (nearbyPlayers.Count == 1)
-        {
-            colliding = false;
-        }
+
     }
 
     private void Atack(InputAction.CallbackContext context)
     {
-        if (mass > 500) Separate();
+        Point newPoint = null;
+        List<Point> pointsToAdd = new();
+        foreach (var point in points)
+        {
+            GameObject pointGo = point.data;
+            float mass = Mathf.PI * superficialDensity * Mathf.Pow(pointGo.transform.localScale.x / 2, 2);
+            if (mass > 500)
+            {
+                newPoint = Separate(pointGo, mass);
+                pointsToAdd.Add(newPoint);
+            }
+        }
+        if (pointsToAdd != null) StartCoroutine(InitialMovement(pointsToAdd));
     }
+    private void HandleInitialMovement(Point point)
+    {
+        oldPoint = point;
+        Vector2 initialDirection = (_mousePosition - (Vector2)Camera.main.transform.position).normalized;
+        _initialSpeed -= acceleration * (0.2f / points.Count * Time.deltaTime);
+        _initialSpeed = Mathf.Max(_initialSpeed, 0);
+        point.data.transform.Translate(initialDirection * (_initialSpeed * (10 * Time.deltaTime)));
+        Vector2 pointPos = point.data.transform.position;
+        point.X = pointPos.x;
+        point.Y = pointPos.y;
+        PlayerManager.instance.quadtree.UpdatePosition(oldPoint, point);
 
+    }
+    private IEnumerator InitialMovement(List<Point> newPoints)
+    {
+        _initialSpeed = maxSpeed;
+        _mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        while (_initialSpeed > 0)
+        {
+            foreach (var point in newPoints)
+            {
+                HandleInitialMovement(point);
+            }
+            yield return new WaitForEndOfFrame();
+        }
+
+        _initialSpeed = maxSpeed;
+        points.AddRange(newPoints);
+    }
 
     public void OnDrawGizmos()
     {
@@ -169,41 +211,92 @@ public class PlayerBehaviour : AbsorbableObject
         Gizmos.DrawWireSphere(transform.position, radius * transform.localScale.x);
     }
 
-    public void Separate()
+    public Point Separate(GameObject mainObject, float mass)
     {
         mass /= 2;
-        PlayerSecondaryBody playerSecondaryBodyLocal = playerSecondaryBody.GetComponent<PlayerSecondaryBody>();
-        playerSecondaryBodyLocal.mass = mass;
-        playerSecondaryBodyLocal.playerRef = playerRef;
+        // PlayerSecondaryBody playerSecondaryBodyLocal = playerSecondaryBody.GetComponent<PlayerSecondaryBody>();
+        // playerSecondaryBodyLocal.mass = mass;
+        // playerSecondaryBodyLocal.playerRef = playerRef;
 
-        GameObject newPart = Instantiate(playerSecondaryBody, transform.position, transform.rotation);
-        PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
-        UpdateDiameter();
+        GameObject newPart = Instantiate(playerSecondaryBody, mainObject.transform.position, mainObject.transform.rotation);
+        Point point = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
+        // points.Add(point);
+        UpdateDiameter(mainObject.transform, mass);
+        UpdateDiameter(newPart.transform, mass);
+
+        if (mainObject == gameObject) this.mass = mass;
+
+        return point;
     }
 
     // Insira esta função em um MonoBehaviour que gerencia a simulação
     // ReSharper disable Unity.PerformanceAnalysis
-    void DetectCollisions() {
-        List<Point> pts = PlayerManager.instance.quadtree.GetPoints();
-        for (int i = 0; i < pts.Count; i++) {
-            pts[i].colliding = false;
-        }
-        for (int i = 0; i < pts.Count; i++) {
-            Point a = pts[i];
-            for (int j = i + 1; j < pts.Count; j++) {
+    public void DetectCollisions(Point point)
+    {
+        point.colliding = false;
+        List<Point> pts = points;
+        // for (int i = 0; i < pts.Count; i++)
+        // {
+        //     pts[i].colliding = false;
+        // }
+        Point a = point;
+        if (a != null)
+        {
+            a.colliding = false;
+            for (int j = 0; j < pts.Count; j++)
+            {
                 Point b = pts[j];
-                float dx = b.X - a.X;
-                float dy = b.Y - a.Y;
-                float distance = Mathf.Sqrt(dx * dx + dy * dy);
-                if (distance <= a.Radius() + b.Radius() && distance != 0) {
-                    a.colliding = true;
-                    b.colliding = true;
-                    Debug.Log("Colisão detectada entre os pontos " + i + " e " + j);
+                if (a != b)
+                {
+                    b.colliding = false;
+                    float dx = b.X - a.X;
+                    float dy = b.Y - a.Y;
+                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (distance <= a.Radius() + b.Radius() && distance != 0)
+                    {
+                        a.colliding = true;
+                        b.colliding = true;
+                    }
                 }
+
+
             }
         }
+        // if (nearbyPlayers.Count > 1)
+        //     {
+        //         Debug.Log("Pontos encontrados na query circular dos players: " + nearbyPlayers.Count);
+        //         foreach (Point point in nearbyPlayers)
+        //         {
+
+        //             GameObject obj = point.data;
+        //             GameObject playerReference = obj.GetComponent<PlayerBehaviour>().playerRef;
+        //             if (playerReference == playerRef)
+        //             {
+        //                 Debug.Log("COlidiu com o player");
+        //                 colliding = true;
+        //             }
+        //             if (gameObject != playerRef && point.data == gameObject)
+        //             {
+
+        //                 if (gameObject.GetComponent<PlayerSecondaryBody>().canMove)
+        //                 {
+        //                     PlayerBehaviour player = playerRef.GetComponent<PlayerBehaviour>();
+        //                     player.mass += mass;
+        //                     player.UpdateDiameter();
+        //                     UpdateDiameter();
+        //                     PlayerManager.instance.quadtree.Remove(point);
+        //                     Destroy(gameObject);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     if (nearbyPlayers.Count == 1)
+        //     {
+        //         colliding = false;
+        //     }
     }
-    
+
+
     // public IEnumerator SizeUpdater(float newSize)
     // {
     //     float localSize = transform.localScale.x;

@@ -3,19 +3,21 @@ using System;
 public class Point
 {
     public float X, Y;
-    public object data;
+    public GameObject data;
     public bool colliding;
+    public string Id;
 
-    public Point(float x, float y, object data)
+    public Point(float x, float y, GameObject data)
     {
         X = x;
         Y = y;
+        Id = Guid.NewGuid().ToString();
         this.data = data;
     }
 
     public float Radius() 
     {
-        GameObject dataGo = data as GameObject;
+        GameObject dataGo = data;
         return dataGo!.transform.localScale.x * 1.25f;
     }
 

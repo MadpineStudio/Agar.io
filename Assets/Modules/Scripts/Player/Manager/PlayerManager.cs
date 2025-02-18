@@ -1,4 +1,5 @@
-using System.Diagnostics;
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using Unity.Cinemachine;
 using Unity.Mathematics;
@@ -13,9 +14,8 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private GameObject CameraPref;
     [SerializeField] PlayerDataScriptable playerData;
     [SerializeField] private GameObject Nick;
-    
-
-
+    private Queue<IEnumerator> _insertMassCorroutines = new();    
+    private Coroutine _InsertPlayerMassCorroutine;
     public Quadtree quadtree;
     public static PlayerManager instance {get; private set;}
     void Awake()
@@ -33,10 +33,21 @@ public class PlayerManager : MonoBehaviour
         SpawnPlayer();
     }
 
-    public void InsertPlayer(float x, float y, GameObject pointObject)
+    public Point InsertPlayer(float x, float y, GameObject pointObject)
     {
         Point point = new Point(x, y, pointObject);
+        pointObject.GetComponent<PlayerBehaviour>().AddInitialPoint(point);
+        _insertMassCorroutines.Enqueue(InsertPlayerMass(point));
+        if(_InsertPlayerMassCorroutine == null){
+            _InsertPlayerMassCorroutine = StartCoroutine(_insertMassCorroutines.Dequeue());
+        }
+        return point;
+    }
+    private IEnumerator InsertPlayerMass(Point point){
         quadtree.Insert(point);
+        yield return new WaitForEndOfFrame();
+        if(_insertMassCorroutines.Count > 0) _InsertPlayerMassCorroutine = StartCoroutine(_insertMassCorroutines.Dequeue());
+        else _InsertPlayerMassCorroutine = null;
     }
 
     void OnDrawGizmos()
@@ -73,11 +84,11 @@ public class PlayerManager : MonoBehaviour
         GameObject playerSpawned = Instantiate(playerPref, pos, quaternion.identity);
         playerSpawned.GetComponent<PlayerBehaviour>().playerRef = playerSpawned;
         
-        Vector2 pos2 = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
-        GameObject playerSpawned2 = Instantiate(playerPref, pos2, quaternion.identity);
+        // Vector2 pos2 = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
+        // GameObject playerSpawned2 = Instantiate(playerPref, pos2, quaternion.identity);
         
         InsertPlayer(pos.x, pos.y,playerSpawned);
-        InsertPlayer(pos2.x, pos2.y,playerSpawned2);
+        // InsertPlayer(pos2.x, pos2.y,playerSpawned2);
 
         GameObject newNickArea = Instantiate(Nick, playerSpawned.transform.position + new Vector3(0, 1.5f), playerSpawned.transform.rotation, playerSpawned.transform);
         newNickArea.GetComponent<TMP_Text>().text = playerData.playerName;
