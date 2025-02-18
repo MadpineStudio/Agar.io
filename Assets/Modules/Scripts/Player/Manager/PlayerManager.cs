@@ -73,7 +73,11 @@ public class PlayerManager : MonoBehaviour
         GameObject playerSpawned = Instantiate(playerPref, pos, quaternion.identity);
         playerSpawned.GetComponent<PlayerBehaviour>().playerRef = playerSpawned;
         
-        InsertPlayer(pos.x, pos.y, playerSpawned);
+        Vector2 pos2 = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
+        GameObject playerSpawned2 = Instantiate(playerPref, pos2, quaternion.identity);
+        
+        InsertPlayer(pos.x, pos.y,playerSpawned);
+        InsertPlayer(pos2.x, pos2.y,playerSpawned2);
 
         GameObject newNickArea = Instantiate(Nick, playerSpawned.transform.position + new Vector3(0, 1.5f), playerSpawned.transform.rotation, playerSpawned.transform);
         newNickArea.GetComponent<TMP_Text>().text = playerData.playerName;

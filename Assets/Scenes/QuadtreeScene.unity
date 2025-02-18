@@ -680,6 +680,10 @@ PrefabInstance:
       propertyPath: playerManager
       value: 
       objectReference: {fileID: 1955069614}
+    - target: {fileID: 3836033229978500243, guid: 26026a4a68ef4b9408881094b000e08f, type: 3}
+      propertyPath: debugQTree
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 9026721403379413282, guid: 26026a4a68ef4b9408881094b000e08f, type: 3}
       propertyPath: m_Name
       value: P_MapManager

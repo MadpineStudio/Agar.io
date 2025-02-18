@@ -24,7 +24,7 @@ public class PlayerBehaviour : AbsorbableObject
         playerActions = new();
         playerActions.Enable();
         if (playerRef == null) playerRef = gameObject;
-        oldPoint = new Point(transform.position.x, transform.position.y, gameObject);
+        oldPoint = new Point(transform.position.x, transform.position.y,gameObject);
     }
 
     void OnEnable()
@@ -79,6 +79,7 @@ public class PlayerBehaviour : AbsorbableObject
 
     private void Update()
     {
+        DetectCollisions();
         QueryNearbyPoints();
         QueryNearbyCircle();
     }
@@ -90,6 +91,7 @@ public class PlayerBehaviour : AbsorbableObject
         nearbyPoints = QTreeEntryPoint.instance.QuadTree.Query(queryRange);
 
     }
+    // ReSharper disable once Unity.NoNullPropagation
     public void QueryNearbyCircle()
     {
         if (QTreeEntryPoint.instance?.QuadTree == null)
@@ -179,6 +181,29 @@ public class PlayerBehaviour : AbsorbableObject
         UpdateDiameter();
     }
 
+    // Insira esta função em um MonoBehaviour que gerencia a simulação
+    // ReSharper disable Unity.PerformanceAnalysis
+    void DetectCollisions() {
+        List<Point> pts = PlayerManager.instance.quadtree.GetPoints();
+        for (int i = 0; i < pts.Count; i++) {
+            pts[i].colliding = false;
+        }
+        for (int i = 0; i < pts.Count; i++) {
+            Point a = pts[i];
+            for (int j = i + 1; j < pts.Count; j++) {
+                Point b = pts[j];
+                float dx = b.X - a.X;
+                float dy = b.Y - a.Y;
+                float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                if (distance <= a.Radius() + b.Radius() && distance != 0) {
+                    a.colliding = true;
+                    b.colliding = true;
+                    Debug.Log("Colisão detectada entre os pontos " + i + " e " + j);
+                }
+            }
+        }
+    }
+    
     // public IEnumerator SizeUpdater(float newSize)
     // {
     //     float localSize = transform.localScale.x;

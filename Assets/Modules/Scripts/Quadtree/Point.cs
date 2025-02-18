@@ -4,12 +4,19 @@ public class Point
 {
     public float X, Y;
     public object data;
+    public bool colliding;
 
     public Point(float x, float y, object data)
     {
         X = x;
         Y = y;
         this.data = data;
+    }
+
+    public float Radius() 
+    {
+        GameObject dataGo = data as GameObject;
+        return dataGo!.transform.localScale.x * 1.25f;
     }
 
     public override bool Equals(object obj)

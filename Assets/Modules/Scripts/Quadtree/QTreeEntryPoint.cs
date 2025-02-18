@@ -19,7 +19,7 @@ public class QTreeEntryPoint : MonoBehaviour
     }
     public void Insert(float x, float y, GameObject poindData)
     {
-        Point point = new Point(x, y, poindData);
+        Point point = new Point(x, y,poindData);
         QuadTree.Insert(point);
     }
     public int CountPoints(){
