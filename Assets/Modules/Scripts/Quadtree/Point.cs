@@ -5,6 +5,8 @@ public class Point
     public float X, Y;
     public GameObject data;
     public bool colliding;
+    public bool hasFullySpawned = false;
+    public bool canBeAbsorbed = false;
     public string Id;
 
     public Point(float x, float y, GameObject data)

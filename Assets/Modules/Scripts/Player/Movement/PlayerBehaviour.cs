@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using System.Diagnostics;
 public class PlayerBehaviour : AbsorbableObject
 {
     private PlayerActions playerActions;
@@ -48,6 +49,10 @@ public class PlayerBehaviour : AbsorbableObject
     new void Start()
     {
         base.Start();
+        Texture playerTex = transform.GetComponent<SpriteRenderer>().sharedMaterial.GetTexture("_MainTex0");
+        playerSecondaryBody.GetComponent<SpriteRenderer>().sharedMaterial.SetTexture("_MainTex0", playerTex);
+        points[0].hasFullySpawned = true;
+        points[0].canBeAbsorbed = true;
     }
 
     public void FixedUpdate()
@@ -75,22 +80,26 @@ public class PlayerBehaviour : AbsorbableObject
         DetectCollisions(points);
         foreach (var point in points)
         {
-            float innertSpeed = 0f;
-            if (point.data != gameObject)
+            if (point.hasFullySpawned)
             {
-                if (!point.colliding)
+                float innertSpeed = 0f;
+                if (point.data != gameObject)
                 {
-                    direction = (Vector2)transform.position - (Vector2)point.data.transform.position + direction;
-                    innertSpeed = 2f;
+                    if (!point.colliding)
+                    {
+                        direction = (Vector2)transform.position - (Vector2)point.data.transform.position + direction;
+                        innertSpeed = 2f;
+                    }
+                  
                 }
+                oldPoint = point;
+                point.data.transform.Translate(direction.normalized * ((currentSpeed > 0 ? currentSpeed : innertSpeed) * Time.fixedDeltaTime));
+                // if()
+                Vector2 pointPos = point.data.transform.position;
+                point.X = pointPos.x;
+                point.Y = pointPos.y;
+                PlayerManager.instance.quadtree.UpdatePosition(oldPoint, point);
             }
-            oldPoint = point;
-            point.data.transform.Translate(direction.normalized * ((currentSpeed > 0 ? currentSpeed : innertSpeed) * Time.fixedDeltaTime));
-            // if()
-            Vector2 pointPos = point.data.transform.position;
-            point.X = pointPos.x;
-            point.Y = pointPos.y;
-            PlayerManager.instance.quadtree.UpdatePosition(oldPoint, point);
         }
         // if (oldpos != transform.position)
         // {
@@ -118,7 +127,8 @@ public class PlayerBehaviour : AbsorbableObject
     {
         if (QTreeEntryPoint.instance?.QuadTree == null)
             return;
-        foreach (var playerPoint in points)
+        List<Point> clonedPoints = new(points);
+        foreach (var playerPoint in clonedPoints)
         {
             Vector2 pos = playerPoint.data.transform.position;
             float radius = this.radius * playerPoint.data.transform.localScale.x;
@@ -136,7 +146,7 @@ public class PlayerBehaviour : AbsorbableObject
 
                         if (point.data.CompareTag("Bacteria"))
                         {
-                            objMass *= 0.1f;
+                            objMass *= 0.5f;
                             mass += objMass;
                             this.mass = mass;
                             UpdateDiameter(playerPoint.data.transform, mass);
@@ -178,7 +188,12 @@ public class PlayerBehaviour : AbsorbableObject
         }
 
         if (point.data == gameObject) this.mass = mass / 5;
-        if (pointsToAdd != null) StartCoroutine(InitialMovement(pointsToAdd, true));
+        if (pointsToAdd != null)
+        {
+            StartCoroutine(EnableAbsorption(pointsToAdd, 10.0f));
+            StartCoroutine(InitialMovement(pointsToAdd, true));
+        }
+        points.AddRange(pointsToAdd);
     }
     private void Attack(InputAction.CallbackContext context)
     {
@@ -192,7 +207,12 @@ public class PlayerBehaviour : AbsorbableObject
                 pointsToAdd.Add(Separate(pointGo, mass));
             }
         }
-        if (pointsToAdd != null) StartCoroutine(InitialMovement(pointsToAdd, false));
+        if (pointsToAdd != null)
+        {
+            StartCoroutine(EnableAbsorption(pointsToAdd, 10.0f));
+            StartCoroutine(InitialMovement(pointsToAdd, false));
+        }
+        points.AddRange(pointsToAdd);
     }
     private float HandleInitialMovement(Point point, float speed)
     {
@@ -211,7 +231,7 @@ public class PlayerBehaviour : AbsorbableObject
     private float HandleExplode(Point point, Vector2 direction, float speed)
     {
         oldPoint = point;
-        speed -= acceleration * (0.4f * Time.deltaTime);
+        speed -= acceleration * (0.3f * Time.deltaTime);
         speed = Mathf.Max(speed, 0);
         point.data.transform.Translate(direction * (speed * (30 * Time.deltaTime)));
         Vector2 pointPos = point.data.transform.position;
@@ -237,7 +257,22 @@ public class PlayerBehaviour : AbsorbableObject
         }
 
         _initialSpeed = maxSpeed;
-        points.AddRange(newPoints);
+        foreach (Point point in newPoints)
+        {
+            Point old = point;
+            point.hasFullySpawned = true;
+            PlayerManager.instance.quadtree.UpdatePosition(old, point);
+        }
+    }
+    private IEnumerator EnableAbsorption(List<Point> points, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        foreach (var point in points)
+        {
+            Point old = point;
+            point.canBeAbsorbed = true;
+            PlayerManager.instance.quadtree.UpdatePosition(old, point);
+        }
     }
 
     public void OnDrawGizmos()
@@ -277,7 +312,7 @@ public class PlayerBehaviour : AbsorbableObject
         List<Point> toDestroy = new(points);
         for (int i = toDestroy.Count - 1; i >= 0; i--)
         {
-            if (i > toDestroy.Count - 1) i -= 1;
+            if (i > toDestroy.Count - 1) i = toDestroy.Count - 1;
             toDestroy[i].colliding = false;
             List<Point> pts = points;
             Point a = toDestroy[i];
@@ -304,17 +339,21 @@ public class PlayerBehaviour : AbsorbableObject
                                 a = b;
                                 b = changer;
                             }
+                            if (a.hasFullySpawned && b.hasFullySpawned && b.canBeAbsorbed)
+                            {
 
-                            float mass = Mathf.PI * superficialDensity * Mathf.Pow(a.data.transform.localScale.x / 2, 2);
-                            float bMass = Mathf.PI * superficialDensity * Mathf.Pow(b.data.transform.localScale.x / 2, 2);
-                            UpdateDiameter(a.data.transform, mass + bMass);
-                            // this.mass += mass;
-                            PlayerManager.instance.quadtree.Remove(b);
-                            pts.Remove(b);
-                            toDestroy.Remove(b);
-                            this.points.Remove(b);
-                            Destroy(b.data);
+                                float mass = Mathf.PI * superficialDensity * Mathf.Pow(a.data.transform.localScale.x / 2, 2);
+                                float bMass = Mathf.PI * superficialDensity * Mathf.Pow(b.data.transform.localScale.x / 2, 2);
+                                UpdateDiameter(a.data.transform, mass + bMass);
+                                // this.mass += mass;
+                                PlayerManager.instance.quadtree.Remove(b);
+                                pts.Remove(b);
+                                toDestroy.Remove(b);
+                                this.points.Remove(b);
+                                Destroy(b.data);
+                            }
                         }
+
                     }
 
 

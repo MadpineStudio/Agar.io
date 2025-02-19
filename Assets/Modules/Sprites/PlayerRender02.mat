@@ -42,7 +42,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex0:
-        m_Texture: {fileID: 2800000, guid: cab798d27cc538846a2acaaa698803f1, type: 3}
+        m_Texture: {fileID: 2800000, guid: 38095b9fd2fffc945a9199e71fb5eb80, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ProfileImage:
