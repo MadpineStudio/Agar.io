@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static QTreeEntryPoint;
-using static PlayerManager;
 using System.Collections;
-using Unity.VisualScripting;
 public class PlayerBehaviour : AbsorbableObject
 {
     private PlayerActions playerActions;
@@ -40,11 +37,11 @@ public class PlayerBehaviour : AbsorbableObject
     {
         playerActions.PlayerMap.Enable();
         playerActions.PlayerMap.Move.ReadValue<Vector2>();
-        playerActions.PlayerMap.Atacar.performed += Atack;
+        playerActions.PlayerMap.Atacar.performed += Attack;
     }
     void OnDisable()
     {
-        playerActions.PlayerMap.Atacar.performed -= Atack;
+        playerActions.PlayerMap.Atacar.performed -= Attack;
         playerActions.PlayerMap.Disable();
     }
 
@@ -63,12 +60,9 @@ public class PlayerBehaviour : AbsorbableObject
     }
     public void HandleMovement()
     {
-        Vector2 direction = playerActions.PlayerMap.Move.ReadValue<Vector2>();
+        // Vector2 direction = playerActions.PlayerMap.Move.ReadValue<Vector2>();
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        if (Input.GetMouseButton(0))
-        {
-            direction = (mousePosition - (Vector2)transform.position).normalized;
-        }
+        var direction = (mousePosition - (Vector2)transform.position).normalized;
         if (direction != Vector2.zero)
         {
             currentSpeed += acceleration * Time.deltaTime;
@@ -144,12 +138,14 @@ public class PlayerBehaviour : AbsorbableObject
                         {
                             objMass *= 0.1f;
                             mass += objMass;
+                            this.mass = mass;
                             UpdateDiameter(playerPoint.data.transform, mass);
                             Explode(playerPoint);
                         }
                         else
                         {
                             mass += objMass;
+                            this.mass = mass;
                             UpdateDiameter(playerPoint.data.transform, mass);
                         }
                         Destroy(point.data);
@@ -184,14 +180,14 @@ public class PlayerBehaviour : AbsorbableObject
         if (point.data == gameObject) this.mass = mass / 5;
         if (pointsToAdd != null) StartCoroutine(InitialMovement(pointsToAdd, true));
     }
-    private void Atack(InputAction.CallbackContext context)
+    private void Attack(InputAction.CallbackContext context)
     {
         List<Point> pointsToAdd = new();
         foreach (var point in points)
         {
             GameObject pointGo = point.data;
             float mass = Mathf.PI * superficialDensity * Mathf.Pow(pointGo.transform.localScale.x / 2, 2);
-            if (mass > 500)
+            if (mass > 40)
             {
                 pointsToAdd.Add(Separate(pointGo, mass));
             }
