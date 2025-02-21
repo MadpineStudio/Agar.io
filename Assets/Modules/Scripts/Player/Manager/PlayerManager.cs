@@ -39,10 +39,12 @@ public class PlayerManager : MonoBehaviour
         Point point = new Point(x, y, pointObject);
         PlayerBehaviour playerBH = pointObject.GetComponent<PlayerBehaviour>();
         if(playerBH != null) playerBH.AddInitialPoint(point);
-        _insertMassCorroutines.Enqueue(InsertPlayerMass(point));
-        if(_InsertPlayerMassCorroutine == null){
-            _InsertPlayerMassCorroutine = StartCoroutine(_insertMassCorroutines.Dequeue());
-        }
+        quadtree.Insert(point);
+
+        // _insertMassCorroutines.Enqueue(InsertPlayerMass(point));
+        // if(_InsertPlayerMassCorroutine == null){
+        //     _InsertPlayerMassCorroutine = StartCoroutine(_insertMassCorroutines.Dequeue());
+        // }
         return point;
     }
     private IEnumerator InsertPlayerMass(Point point){

@@ -8,8 +8,6 @@ public class PlayerBehaviour : AbsorbableObject
     private List<Point> points = new();
     private List<Point> nearbyPoints;
     private PlayerActions playerActions;
-    private Vector2 _mousePosition = new();
-    private Point oldPoint;
     private float _initialSpeed;
     [SerializeField] private PlayerSettings playerSettings;
     [SerializeField] private GameObject playerSecondaryBody;
@@ -19,6 +17,7 @@ public class PlayerBehaviour : AbsorbableObject
     public float currentSpeed;
     public float acceleration;
     public float maxSpeed;
+    public float offset;
 
     #region UnityFunctions
     void OnEnable()
@@ -53,7 +52,7 @@ public class PlayerBehaviour : AbsorbableObject
     {
         if (points.Count > 0) HandleMovement();
     }
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     public void OnDrawGizmos()
     {
         if (!playerSettings.debug) return;
@@ -69,7 +68,7 @@ public class PlayerBehaviour : AbsorbableObject
         Gizmos.DrawWireCube(transform.position, new Vector3(playerSettings.searchAreaWidth * 2f, playerSettings.searchAreaHeight * 2f));
         Gizmos.DrawWireSphere(transform.position, radius * transform.localScale.x);
     }
-    #endif
+#endif
     #endregion
     #region MovementHandlers
     public void HandleMovement()
@@ -84,24 +83,15 @@ public class PlayerBehaviour : AbsorbableObject
         else currentSpeed = 0f;
         for (int i = points.Count - 1; i >= 0; i--)
         {
+            direction = mousePosition - (Vector2)points[i].data.transform.position;
             Vector2 changingDirection = Vector2.zero;
             if (points[i].hasFullySpawned)
             {
                 float innertSpeed = 0f;
-                if (points[i].data != gameObject)
-                {
-                    Vector2 colisionDirection = DetectCollisions(points[i]);
-                    if (i >= points.Count) i = points.Count - 1;
-
-                    if (!points[i].colliding)
-                    {
-                        changingDirection = (Vector2)transform.position - (Vector2)points[i].data.transform.position;
-                        innertSpeed = 2f;
-                    }
-                    else changingDirection = colisionDirection;
-
-                }
-                oldPoint = points[i];
+                // changingDirection = DetectCollisions(points[i]);
+                DetectCollisions(points[i]);
+                if (i >= points.Count) i = points.Count - 1;
+                Point oldPoint = points[i];
                 points[i].data.transform.Translate((direction + changingDirection).normalized * ((currentSpeed > 0 ? currentSpeed : innertSpeed) * Time.fixedDeltaTime));
                 Vector2 pointPos = points[i].data.transform.position;
                 points[i].X = pointPos.x;
@@ -111,9 +101,9 @@ public class PlayerBehaviour : AbsorbableObject
         }
 
     }
-    private float HandleInitialMovement(Point point, Vector2 direction,float speed)
+    private float HandleInitialMovement(Point point, Vector2 direction, float speed)
     {
-        oldPoint = point;
+        Point oldPoint = point;
         speed -= acceleration * (0.3f / points.Count * Time.deltaTime);
         speed = Mathf.Max(speed, 0);
         point.data.transform.Translate(direction * (speed * (10 * Time.deltaTime)));
@@ -134,7 +124,9 @@ public class PlayerBehaviour : AbsorbableObject
         if (point.data == gameObject) this.mass = mass / 5;
         for (int i = 0; i < 4; i++)
         {
-            newParts.Add(Instantiate(playerSecondaryBody, point.data.transform.position, point.data.transform.rotation));
+            GameObject newPart = Instantiate(playerSecondaryBody, point.data.transform.position, point.data.transform.rotation);
+            newPart.name = "jorge" + points.Count + i * Time.time;
+            newParts.Add(newPart);
         }
         foreach (var newPart in newParts)
         {
@@ -172,6 +164,7 @@ public class PlayerBehaviour : AbsorbableObject
     {
         mass /= 2;
         GameObject newPart = Instantiate(playerSecondaryBody, mainObject.transform.position, mainObject.transform.rotation);
+        newPart.name = "jorge" + points.Count + Random.Range(0,5) * Time.time;
         Point point = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
         UpdateDiameter(mainObject.transform, mass);
         UpdateDiameter(newPart.transform, mass);
@@ -251,20 +244,25 @@ public class PlayerBehaviour : AbsorbableObject
                     b.colliding = false;
                     Vector2 dis = new Vector2(b.X - a.X, b.Y - a.Y);
                     float distance = Mathf.Sqrt(dis.x * dis.x + dis.y * dis.y);
-                    if (distance <= a.Radius() + b.Radius() && distance != 0)
+                    if (a.hasFullySpawned && b.hasFullySpawned && distance <= a.Radius() + b.Radius() && distance != 0)
                     {
                         a.colliding = true;
+                        Point oldPoint = b;
                         b.colliding = true;
-                        Vector2 toObject = (Vector2)a.data.transform.position - (Vector2)b.data.transform.position;
+                        Vector2 toObject = (Vector2)b.data.transform.position - (Vector2)a.data.transform.position;
                         float distanceBt = toObject.magnitude;
-                        if (distanceBt > 0) avoidanceVector += toObject.normalized /distance;
-                        if (b.data == gameObject)
+                        if (distanceBt > 0) avoidanceVector += toObject * distance;
+                        b.data.transform.Translate(toObject.normalized * offset * -(distance - (a.Radius() + b.Radius())) * (maxSpeed * Time.fixedDeltaTime));
+                        Vector2 pointPos = b.data.transform.position;
+                        b.X = pointPos.x;
+                        b.Y = pointPos.y;
+                        PlayerManager.instance.quadtree.UpdatePosition(oldPoint, b); if (b.data == gameObject)
                         {
                             Point changer = a;
                             a = b;
                             b = changer;
                         }
-                        if (a.hasFullySpawned && b.hasFullySpawned && b.canBeAbsorbed)
+                        if (b.canBeAbsorbed)
                         {
 
                             float mass = Mathf.PI * superficialDensity * Mathf.Pow(a.data.transform.localScale.x / 2, 2);
@@ -275,7 +273,6 @@ public class PlayerBehaviour : AbsorbableObject
                             points.Remove(b);
                             Destroy(b.data);
                         }
-                        else collided.Add(b);
                     }
                 }
             }
@@ -294,7 +291,7 @@ public class PlayerBehaviour : AbsorbableObject
         {
             foreach (var point in newPoints)
             {
-                if (!exploding) speed = HandleInitialMovement(point,localMousePos, speed);
+                if (!exploding) speed = HandleInitialMovement(point, localMousePos, speed);
                 else speed = HandleInitialMovement(point, directions[newPoints.IndexOf(point)], speed);
             }
             yield return new WaitForEndOfFrame();
@@ -313,9 +310,9 @@ public class PlayerBehaviour : AbsorbableObject
         yield return new WaitForSeconds(delay);
         foreach (var point in points)
         {
-            Point old = point;
+            // Point old = point;
             point.canBeAbsorbed = true;
-            PlayerManager.instance.quadtree.UpdatePosition(old, point);
+            // PlayerManager.instance.quadtree.UpdatePosition(old, point);
         }
     }
     #endregion

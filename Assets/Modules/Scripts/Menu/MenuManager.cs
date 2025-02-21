@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MenuManager : MonoBehaviour
@@ -19,5 +20,8 @@ public class MenuManager : MonoBehaviour
     public void ChangeProfilePicture(Image sprite){
         playerData.playerImage = sprite.sprite;
         image.sprite = sprite.sprite;
+    }
+    public void OnQuit(){
+        SceneManager.LoadScene(0);
     }
 }

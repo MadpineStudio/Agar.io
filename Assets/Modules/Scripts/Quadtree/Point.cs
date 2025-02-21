@@ -7,13 +7,11 @@ public class Point
     public bool colliding;
     public bool hasFullySpawned = false;
     public bool canBeAbsorbed = false;
-    public string Id;
 
     public Point(float x, float y, GameObject data)
     {
         X = x;
         Y = y;
-        Id = Guid.NewGuid().ToString();
         this.data = data;
     }
 
