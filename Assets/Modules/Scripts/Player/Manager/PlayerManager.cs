@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Cinemachine;
 using Unity.Mathematics;
+using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : NetworkBehaviour
 {
     [SerializeField] private MapDataSettings mapDataSettings;
     [SerializeField] private bool debugQTree;
@@ -31,7 +32,7 @@ public class PlayerManager : MonoBehaviour
         float scale = Mathf.CeilToInt(mapDataSettings.boardScale * .5f);
         Rectangle bounds = new Rectangle(0, 0, scale, scale);
         quadtree = new Quadtree(bounds, mapDataSettings.maxCapacityByChunk);
-        SpawnPlayer();
+        // SpawnPlayer();
     }
 
     public Point InsertPlayer(float x, float y, GameObject pointObject)
@@ -41,10 +42,7 @@ public class PlayerManager : MonoBehaviour
         if(playerBH != null) playerBH.AddInitialPoint(point);
         quadtree.Insert(point);
 
-        // _insertMassCorroutines.Enqueue(InsertPlayerMass(point));
-        // if(_InsertPlayerMassCorroutine == null){
-        //     _InsertPlayerMassCorroutine = StartCoroutine(_insertMassCorroutines.Dequeue());
-        // }
+    
         return point;
     }
     private IEnumerator InsertPlayerMass(Point point){
@@ -87,17 +85,10 @@ public class PlayerManager : MonoBehaviour
         
         GameObject playerSpawned = Instantiate(playerPref, pos, quaternion.identity);
         playerSpawned.GetComponent<SpriteRenderer>().material.SetTexture("_MainTex0", playerData.playerImage.texture);
-        // playerSpawned.GetComponent<PlayerBehaviour>().playerRef = playerSpawned;
-        // playerSpawned.GetComponent<PlayerBehaviour>().playerRef = playerSpawned;
-        
-        // Vector2 pos2 = new Vector2(Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f), Random.Range(-mapDataSettings.boardScale * .5f, mapDataSettings.boardScale * .5f));
-        // GameObject playerSpawned2 = Instantiate(playerPref, pos2, quaternion.identity);
-        
-        InsertPlayer(pos.x, pos.y,playerSpawned);
-        // InsertPlayer(pos2.x, pos2.y,playerSpawned2);
 
         GameObject newNickArea = Instantiate(Nick, playerSpawned.transform.position , playerSpawned.transform.rotation, playerSpawned.transform);
         newNickArea.GetComponent<TMP_Text>().text = playerData.playerName;
+        
         GameObject upperPoint = new GameObject("UpperPivot");
         
         upperPoint.transform.SetParent(playerSpawned.transform);

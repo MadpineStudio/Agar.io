@@ -1,7 +1,8 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class AbsorbableObject : MonoBehaviour
+public class AbsorbableObject : NetworkBehaviour
 {
     public float mass;
     public bool isBacteria;
@@ -12,7 +13,6 @@ public class AbsorbableObject : MonoBehaviour
         float newDiameter = Mathf.Sqrt(mass / (Mathf.PI * superficialDensity)) * 2;
         transform.localScale = new Vector3(newDiameter, newDiameter, newDiameter);
     }
-
     void Update()
     {
     }

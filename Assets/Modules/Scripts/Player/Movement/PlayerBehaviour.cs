@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using Unity.Cinemachine;
+using Unity.Netcode;
+using TMPro;
 public class PlayerBehaviour : AbsorbableObject
 {
 
@@ -11,8 +14,8 @@ public class PlayerBehaviour : AbsorbableObject
     private float _initialSpeed;
     [SerializeField] private PlayerSettings playerSettings;
     [SerializeField] private GameObject playerSecondaryBody;
-    public GameObject playerRef;
-    public Rigidbody2D playerRb;
+    [SerializeField] private GameObject cameraPrefab;
+    [SerializeField] private PlayerDataScriptable playerData;
     public float radius = 1;
     public float currentSpeed;
     public float acceleration;
@@ -35,14 +38,23 @@ public class PlayerBehaviour : AbsorbableObject
     {
         playerActions = new();
         playerActions.Enable();
-        if (playerRef == null) playerRef = gameObject;
+
+
     }
     new void Start()
     {
         base.Start();
         Texture playerTex = transform.GetComponent<SpriteRenderer>().sharedMaterial.GetTexture("_MainTex0");
         playerSecondaryBody.GetComponent<SpriteRenderer>().sharedMaterial.SetTexture("_MainTex0", playerTex);
+        PlayerManager.instance.InsertPlayer(transform.position.x, transform.position.y, gameObject);
+       
     }
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        Initialize();
+    }
+
     private void Update()
     {
         QueryNearbyPoints();
@@ -50,6 +62,7 @@ public class PlayerBehaviour : AbsorbableObject
     }
     public void FixedUpdate()
     {
+        if (!IsOwner || !Application.isFocused) return;
         if (points.Count > 0) HandleMovement();
     }
 #if UNITY_EDITOR
@@ -69,6 +82,21 @@ public class PlayerBehaviour : AbsorbableObject
         Gizmos.DrawWireSphere(transform.position, radius * transform.localScale.x);
     }
 #endif
+    #endregion
+    #region Network
+    public void Initialize()
+    {
+        gameObject.GetComponent<SpriteRenderer>().material.SetTexture("_MainTex0", playerData.playerImage.texture);
+        TMP_Text nickArea = transform.GetChild(1).GetComponent<TMP_Text>();
+        nickArea.text = playerData.playerName;
+         if (IsOwner)
+        {
+            CinemachineTargetGroup targetGroup = transform.GetChild(0).transform.GetComponent<CinemachineTargetGroup>();
+
+            CinemachineVirtualCameraBase camera = Instantiate(cameraPrefab, Vector3.zero, Quaternion.identity).GetComponent<CinemachineCamera>();
+            camera.Follow = targetGroup.transform;
+        }
+    }
     #endregion
     #region MovementHandlers
     public void HandleMovement()
@@ -164,7 +192,7 @@ public class PlayerBehaviour : AbsorbableObject
     {
         mass /= 2;
         GameObject newPart = Instantiate(playerSecondaryBody, mainObject.transform.position, mainObject.transform.rotation);
-        newPart.name = "jorge" + points.Count + Random.Range(0,5) * Time.time;
+        newPart.name = "jorge" + points.Count + Random.Range(0, 5) * Time.time;
         Point point = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
         UpdateDiameter(mainObject.transform, mass);
         UpdateDiameter(newPart.transform, mass);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(QTreeEntryPoint))]
@@ -28,17 +27,17 @@ public class MapManager : MonoBehaviour
     {
         nickArea.text = playerData.playerName;
     }
-    public void StartGame()
+    public void StartGame(bool isClient)
     {
         playerData.playerName = nickArea.text;
         QTreeEntryPoint.instance.SetupQTree(mapDataSettings.maxCapacityByChunk, Mathf.CeilToInt(mapDataSettings.boardScale * .5f));
         spawnerActivated = true;
-        SpawnStartInertMassCells();
+        SpawnStartInertMassCells(isClient);
         StartCoroutine(SpawnInertMass(.1f));
         StartCoroutine(BacteriaSpawner(1));
 
     }
-    public void SpawnStartInertMassCells()
+    public void SpawnStartInertMassCells(bool isClient)
     {
         for (int a = 0; a < mapDataSettings.startAbsorbablesCount; a++)
         {
@@ -48,6 +47,7 @@ public class MapManager : MonoBehaviour
             GameObject newDormantBall = Instantiate(dormantMassBall, pos, quaternion.identity, transform);
             QTreeEntryPoint.instance.Insert(pos.x, pos.y, newDormantBall);
         }
+        // playerManager.GetComponent<PlayerManager>().isClient = isClient;
         playerManager.SetActive(true);
     }
 
