@@ -10,7 +10,9 @@ public class PlayerBehaviour : AbsorbableObject
 
     private List<Point> points = new();
     private List<Point> nearbyPoints;
+    private List<GameObject> newParts = new();
     private PlayerActions playerActions;
+    private GameObject _newPart;
     private float _initialSpeed;
     [SerializeField] private PlayerSettings playerSettings;
     [SerializeField] private GameObject playerSecondaryBody;
@@ -47,7 +49,7 @@ public class PlayerBehaviour : AbsorbableObject
         Texture playerTex = transform.GetComponent<SpriteRenderer>().sharedMaterial.GetTexture("_MainTex0");
         playerSecondaryBody.GetComponent<SpriteRenderer>().sharedMaterial.SetTexture("_MainTex0", playerTex);
         PlayerManager.instance.InsertPlayer(transform.position.x, transform.position.y, gameObject);
-       
+
     }
     public override void OnNetworkSpawn()
     {
@@ -89,13 +91,98 @@ public class PlayerBehaviour : AbsorbableObject
         gameObject.GetComponent<SpriteRenderer>().material.SetTexture("_MainTex0", playerData.playerImage.texture);
         TMP_Text nickArea = transform.GetChild(1).GetComponent<TMP_Text>();
         nickArea.text = playerData.playerName;
-         if (IsOwner)
+        if (IsOwner)
         {
             CinemachineTargetGroup targetGroup = transform.GetChild(0).transform.GetComponent<CinemachineTargetGroup>();
 
             CinemachineVirtualCameraBase camera = Instantiate(cameraPrefab, Vector3.zero, Quaternion.identity).GetComponent<CinemachineCamera>();
             camera.Follow = targetGroup.transform;
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ExplodeServerRpc(Vector3 position, Quaternion rotation, ulong clientId, ServerRpcParams rpcParams = default)
+    {
+        // O servidor instancia e sincroniza a nova parte
+        GameObject newPart = Instantiate(playerSecondaryBody, position, rotation);
+        NetworkObject networkObject = newPart.GetComponent<NetworkObject>();
+
+        if (networkObject != null)
+        {
+            networkObject.SpawnWithOwnership(clientId, true); // Sincroniza com todos os clientes
+            SyncNewPartClientRpc(networkObject.NetworkObjectId); // Sincroniza o ID com os clientes
+        }
+        else
+        {
+            Debug.LogError("NetworkObject não encontrado no prefab!");
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestExplodeServerRpc(int pointIndex)
+    {
+        ExplodeClientRpc(pointIndex);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestDespawnObjectServerRpc(ulong objectId)
+    {
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out NetworkObject networkObject)){
+            networkObject.Despawn(true);
+        } 
+
+    }
+    [ClientRpc]
+    private void SyncNewPartClientRpc(ulong objectId)
+    {
+        // Garante que o cliente adiciona a nova parte à lista correta
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out NetworkObject networkObject))
+        {
+            newParts.Add(networkObject.gameObject);
+        }
+    }
+
+    [ClientRpc]
+    private void ExplodeClientRpc(int pointIndex)
+    {
+        if (!IsOwner) return;
+
+        List<Point> pointsToAdd = new();
+        Point point = points[pointIndex];
+
+        float mass = Mathf.PI * superficialDensity * Mathf.Pow(point.data.transform.localScale.x / 2, 2);
+        UpdateDiameter(point.data.transform, mass / 5);
+        if (point.data == gameObject) this.mass = mass / 5;
+
+        for (int i = 0; i < 4; i++)
+        {
+            // Solicita ao servidor que crie e sincronize o objeto
+            ExplodeServerRpc(points[pointIndex].data.transform.position, points[pointIndex].data.transform.rotation, NetworkManager.Singleton.LocalClientId);
+        }
+
+        // Esperar o servidor criar e sincronizar as novas partes antes de manipulá-las
+        StartCoroutine(WaitForNewParts(pointsToAdd, mass / 5));
+    }
+
+    private IEnumerator WaitForNewParts(List<Point> pointsToAdd, float newMass)
+    {
+        // Aguarda um pequeno tempo para garantir que os objetos foram sincronizados
+        yield return new WaitUntil(() => newParts.Count > 0);
+
+        foreach (var newPart in newParts)
+        {
+            UpdateDiameter(newPart.transform, newMass);
+            Point newPoint = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
+            pointsToAdd.Add(newPoint);
+        }
+
+        if (pointsToAdd.Count > 0)
+        {
+            StartCoroutine(EnableAbsorption(pointsToAdd, 20.0f));
+            StartCoroutine(InitialMovement(pointsToAdd, true));
+        }
+
+        points.AddRange(pointsToAdd);
+        newParts.Clear(); // Limpa a lista para a próxima explosão
     }
     #endregion
     #region MovementHandlers
@@ -145,29 +232,8 @@ public class PlayerBehaviour : AbsorbableObject
     #region PlayerActions
     private void Explode(Point point)
     {
-        List<Point> pointsToAdd = new();
-        List<GameObject> newParts = new();
-        float mass = Mathf.PI * superficialDensity * Mathf.Pow(point.data.transform.localScale.x / 2, 2);
-        UpdateDiameter(point.data.transform, mass / 5);
-        if (point.data == gameObject) this.mass = mass / 5;
-        for (int i = 0; i < 4; i++)
-        {
-            GameObject newPart = Instantiate(playerSecondaryBody, point.data.transform.position, point.data.transform.rotation);
-            newPart.name = "jorge" + points.Count + i * Time.time;
-            newParts.Add(newPart);
-        }
-        foreach (var newPart in newParts)
-        {
-            UpdateDiameter(newPart.transform, mass / 5);
-            Point newPoint = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
-            pointsToAdd.Add(newPoint);
-        }
-        if (pointsToAdd != null)
-        {
-            StartCoroutine(EnableAbsorption(pointsToAdd, 20.0f));
-            StartCoroutine(InitialMovement(pointsToAdd, true));
-        }
-        points.AddRange(pointsToAdd);
+        Debug.Log(IsOwner);
+        if (IsOwner) RequestExplodeServerRpc(points.IndexOf(point));
     }
     private void Attack(InputAction.CallbackContext context)
     {
@@ -292,14 +358,25 @@ public class PlayerBehaviour : AbsorbableObject
                         }
                         if (b.canBeAbsorbed)
                         {
-
                             float mass = Mathf.PI * superficialDensity * Mathf.Pow(a.data.transform.localScale.x / 2, 2);
                             float bMass = Mathf.PI * superficialDensity * Mathf.Pow(b.data.transform.localScale.x / 2, 2);
+
                             UpdateDiameter(a.data.transform, mass + bMass);
                             PlayerManager.instance.quadtree.Remove(b);
                             pts.Remove(b);
                             points.Remove(b);
-                            Destroy(b.data);
+
+                            // Obtém o NetworkObject e despawna na rede
+                            NetworkObject netObj = b.data.GetComponent<NetworkObject>();
+                            if (netObj != null)
+                            {
+                                if (netObj.IsSpawned)
+                                    RequestDespawnObjectServerRpc(netObj.NetworkObjectId);
+                            }
+                            else
+                            {
+                                Debug.LogError("NetworkObject não encontrado ao tentar despawnar!");
+                            }
                         }
                     }
                 }
@@ -311,6 +388,8 @@ public class PlayerBehaviour : AbsorbableObject
     #region Corroutines
     private IEnumerator InitialMovement(List<Point> newPoints, bool exploding)
     {
+        Debug.Log("Ta rolando");
+        Debug.Log(newPoints.Count);
         Vector2[] directions = { Vector2.up, Vector2.down, Vector2.right, Vector2.left };
         _initialSpeed = maxSpeed;
         float speed = _initialSpeed;

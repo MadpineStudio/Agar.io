@@ -23,6 +23,7 @@ public class MenuManager : MonoBehaviour
         image.sprite = sprite.sprite;
     }
     public void OnQuit(){
+        Destroy(NetworkManager.Singleton.gameObject);
         SceneManager.LoadScene(0);
     }
 }

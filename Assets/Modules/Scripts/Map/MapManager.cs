@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Mathematics;
+using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -26,6 +27,11 @@ public class MapManager : MonoBehaviour
     void Start()
     {
         nickArea.text = playerData.playerName;
+         Debug.Log("Listando NetworkPrefabs registrados:");
+        foreach (var prefab in NetworkManager.Singleton.NetworkConfig.Prefabs.Prefabs)
+        {
+            Debug.Log($"Prefab: {prefab.Prefab.name}, Hash: {prefab.GetHashCode()}");
+        }
     }
     public void StartGame(bool isClient)
     {
