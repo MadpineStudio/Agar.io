@@ -64,7 +64,8 @@ public class PlayerBehaviour : AbsorbableObject
     }
     public void FixedUpdate()
     {
-        if (!IsOwner || !Application.isFocused) return;
+        // if (!IsOwner || !Application.isFocused) return;
+        if (!Application.isFocused) return;
         if (points.Count > 0) HandleMovement();
     }
 #if UNITY_EDITOR
@@ -232,8 +233,31 @@ public class PlayerBehaviour : AbsorbableObject
     #region PlayerActions
     private void Explode(Point point)
     {
-        Debug.Log(IsOwner);
-        if (IsOwner) RequestExplodeServerRpc(points.IndexOf(point));
+        // Debug.Log(IsOwner);
+        // if (IsOwner) RequestExplodeServerRpc(points.IndexOf(point));
+        List<Point> pointsToAdd = new();
+        List<GameObject> newParts = new();
+        float mass = Mathf.PI * superficialDensity * Mathf.Pow(point.data.transform.localScale.x / 2, 2);
+        UpdateDiameter(point.data.transform, mass / 5);
+        if (point.data == gameObject) this.mass = mass / 5;
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject newPart = Instantiate(playerSecondaryBody, point.data.transform.position, point.data.transform.rotation);
+            newPart.name = "jorge" + points.Count + i * Time.time;
+            newParts.Add(newPart);
+        }
+        foreach (var newPart in newParts)
+        {
+            UpdateDiameter(newPart.transform, mass / 5);
+            Point newPoint = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
+            pointsToAdd.Add(newPoint);
+        }
+        if (pointsToAdd != null)
+        {
+            StartCoroutine(EnableAbsorption(pointsToAdd, 20.0f));
+            StartCoroutine(InitialMovement(pointsToAdd, true));
+        }
+        points.AddRange(pointsToAdd);
     }
     private void Attack(InputAction.CallbackContext context)
     {
@@ -372,6 +396,7 @@ public class PlayerBehaviour : AbsorbableObject
                             {
                                 if (netObj.IsSpawned)
                                     RequestDespawnObjectServerRpc(netObj.NetworkObjectId);
+                                else Destroy(b.data);
                             }
                             else
                             {

@@ -26,16 +26,18 @@ public class MapManager : MonoBehaviour
 
     void Start()
     {
+        WebGLInput.captureAllKeyboardInput = false;
         nickArea.text = playerData.playerName;
-         Debug.Log("Listando NetworkPrefabs registrados:");
+        Debug.Log("Listando NetworkPrefabs registrados:");
         foreach (var prefab in NetworkManager.Singleton.NetworkConfig.Prefabs.Prefabs)
         {
             Debug.Log($"Prefab: {prefab.Prefab.name}, Hash: {prefab.GetHashCode()}");
         }
     }
-    public void StartGame(bool isClient)
+    public void StartGame(string nick)
     {
-        playerData.playerName = nickArea.text;
+        bool isClient = true;
+        playerData.playerName = nick;
         QTreeEntryPoint.instance.SetupQTree(mapDataSettings.maxCapacityByChunk, Mathf.CeilToInt(mapDataSettings.boardScale * .5f));
         spawnerActivated = true;
         SpawnStartInertMassCells(isClient);

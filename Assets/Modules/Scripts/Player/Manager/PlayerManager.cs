@@ -32,7 +32,7 @@ public class PlayerManager : NetworkBehaviour
         float scale = Mathf.CeilToInt(mapDataSettings.boardScale * .5f);
         Rectangle bounds = new Rectangle(0, 0, scale, scale);
         quadtree = new Quadtree(bounds, mapDataSettings.maxCapacityByChunk);
-        // SpawnPlayer();
+        SpawnPlayer();
     }
 
     public Point InsertPlayer(float x, float y, GameObject pointObject)
