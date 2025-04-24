@@ -127,9 +127,10 @@ public class PlayerBehaviour : AbsorbableObject
     [ServerRpc(RequireOwnership = false)]
     private void RequestDespawnObjectServerRpc(ulong objectId)
     {
-        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out NetworkObject networkObject)){
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out NetworkObject networkObject))
+        {
             networkObject.Despawn(true);
-        } 
+        }
 
     }
     [ClientRpc]
@@ -237,6 +238,7 @@ public class PlayerBehaviour : AbsorbableObject
         // if (IsOwner) RequestExplodeServerRpc(points.IndexOf(point));
         List<Point> pointsToAdd = new();
         List<GameObject> newParts = new();
+        Vector2[] directions = { Vector2.up * .2f, Vector2.down * .2f, Vector2.right * .2f, Vector2.left * .2f };
         float mass = Mathf.PI * superficialDensity * Mathf.Pow(point.data.transform.localScale.x / 2, 2);
         UpdateDiameter(point.data.transform, mass / 5);
         if (point.data == gameObject) this.mass = mass / 5;
@@ -248,8 +250,9 @@ public class PlayerBehaviour : AbsorbableObject
         }
         foreach (var newPart in newParts)
         {
+
             UpdateDiameter(newPart.transform, mass / 5);
-            Point newPoint = PlayerManager.instance.InsertPlayer(newPart.transform.position.x, newPart.transform.position.y, newPart);
+            Point newPoint = PlayerManager.instance.InsertPlayer(newPart.transform.position.x + directions[newParts.IndexOf(newPart)].x, newPart.transform.position.y + directions[newParts.IndexOf(newPart)].y, newPart);
             pointsToAdd.Add(newPoint);
         }
         if (pointsToAdd != null)

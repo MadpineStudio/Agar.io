@@ -26,7 +26,9 @@ public class MapManager : MonoBehaviour
 
     void Start()
     {
+        #if !UNITY_EDITOR
         WebGLInput.captureAllKeyboardInput = false;
+        #endif
         nickArea.text = playerData.playerName;
         Debug.Log("Listando NetworkPrefabs registrados:");
         foreach (var prefab in NetworkManager.Singleton.NetworkConfig.Prefabs.Prefabs)
@@ -36,16 +38,15 @@ public class MapManager : MonoBehaviour
     }
     public void StartGame(string nick)
     {
-        bool isClient = true;
         playerData.playerName = nick;
         QTreeEntryPoint.instance.SetupQTree(mapDataSettings.maxCapacityByChunk, Mathf.CeilToInt(mapDataSettings.boardScale * .5f));
         spawnerActivated = true;
-        SpawnStartInertMassCells(isClient);
+        SpawnStartInertMassCells();
         StartCoroutine(SpawnInertMass(.1f));
         StartCoroutine(BacteriaSpawner(1));
 
     }
-    public void SpawnStartInertMassCells(bool isClient)
+    public void SpawnStartInertMassCells()
     {
         for (int a = 0; a < mapDataSettings.startAbsorbablesCount; a++)
         {
@@ -55,17 +56,16 @@ public class MapManager : MonoBehaviour
             GameObject newDormantBall = Instantiate(dormantMassBall, pos, quaternion.identity, transform);
             QTreeEntryPoint.instance.Insert(pos.x, pos.y, newDormantBall);
         }
-        // playerManager.GetComponent<PlayerManager>().isClient = isClient;
         playerManager.SetActive(true);
     }
 
 
-    public void ReactivateSpawner()
-    {
+    // public void ReactivateSpawner()
+    // {
         // spawnerActivated = true;
         // StartCoroutine(SpawnInertMass(.1f));
         // StartCoroutine(BacteriaSpawner(1));
-    }
+    // }
     private IEnumerator SpawnInertMass(float delay)
     {
         int maxSpawnCapacity = 500;

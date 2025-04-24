@@ -16,25 +16,6 @@ public class AbsorbableObject : NetworkBehaviour
     void Update()
     {
     }
-   
-    // public void Absorb(GameObject Absorbed, float mass, bool isBacteria)
-    // {
-    //     Destroy(Absorbed);
-    //     this.mass += mass;
-    //     if (isBacteria)
-    //     {
-    //         this.mass /= 5;
-    //         for (int i = 0; i < 4; i++)
-    //         {
-    //             // PlayerSecondaryBody playeSecBInstance = playerSecondaryBody.GetComponent<PlayerSecondaryBody>();
-    //             // playeSecBInstance.mass = this.mass;
-    //             // playeSecBInstance.playerRef = gameObject;
-    //             // GameObject secondBody = Instantiate(playerSecondaryBody, transform.position, transform.rotation);
-    //             // secondBody.GetComponent<Rigidbody2D>().AddForce(new Vector2(UnityEngine.Random.Range(-1, 1), UnityEngine.Random.Range(-1, 1)) * 1000 * Time.deltaTime, ForceMode2D.Impulse);
-
-    //         }
-    //     }
-    // }
 
 
     public void UpdateDiameter(Transform transform, float mass){
